@@ -1,0 +1,33 @@
+---
+// Placeholder : logo seul. Contenu final à définir avec le porteur du projet.
+// TODO: PUBLIC_LOGO_HREF à définir ; vide = logo sans lien.
+const logoHref = import.meta.env.PUBLIC_LOGO_HREF;
+---
+
+<header class="header">
+  {
+    logoHref ? (
+      <a href={logoHref} aria-label="ChatVote">
+        <img class="logo" src="/logo-chatvote.svg" alt="ChatVote" width="500" height="500" />
+      </a>
+    ) : (
+      <img class="logo" src="/logo-chatvote.svg" alt="ChatVote" width="500" height="500" />
+    )
+  }
+</header>
+
+<style>
+  .header {
+    display: flex;
+    align-items: center;
+    height: var(--header-height);
+    padding-inline: var(--gutter);
+    background: var(--surface-100);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    height: calc(var(--header-height) - var(--space-3));
+    width: auto;
+  }
+</style>
