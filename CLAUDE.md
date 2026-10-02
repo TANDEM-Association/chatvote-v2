@@ -31,6 +31,7 @@ V1 : commune **Saint-Saturnin, code 63396**.
 | Hébergement | Vercel, sans adapter (statique). Migration vers un hébergeur français possible plus tard |
 | Config | Variables d'environnement `PUBLIC_*` |
 | Analytics | **Aucun** |
+| Identifiant utilisateur | `userID` aléatoire **généré par le site**, stocké dans **un seul cookie first-party**, transmis à l'iframe (voir section dédiée) |
 | Langue du site | Français uniquement (`lang="fr"`), pas d'i18n |
 | Pages légales | Reportées (à traiter lors de l'enrichissement du footer) |
 | Liens (don, clic logo) | **À définir plus tard** : prévoir des variables/placeholders |
@@ -40,9 +41,10 @@ Fichier réservé Astro 7 : ne **pas** créer `src/fetch.ts` (routage avancé).
 ## Contraintes de confidentialité (strictes)
 
 - **Aucun service externe** côté site : pas de Google Fonts, pas de CDN, pas de scripts tiers, pas d'analytics.
-- **Aucun cookie ni `localStorage`/`sessionStorage`** posé par le site en l'état. Un cookie de session pourrait être ajouté plus tard (à confirmer, ne rien anticiper).
+- **Un seul cookie autorisé : le cookie `userID`** (first-party, posé par le site, voir section « Identifiant utilisateur »). Aucun autre cookie, et **aucun `localStorage`/`sessionStorage`**.
+- Le `userID` est un identifiant pseudonyme aléatoire : il ne contient **aucune donnée personnelle** et n'est jamais dérivé d'informations sur l'utilisateur (IP, user-agent, etc.).
 - Polices, logo et favicon sont **servis localement** (aucun hotlink vers `app.chatvote.org`).
-- Le chat dans l'iframe est un contexte séparé : ses cookies éventuels relèvent de son domaine, pas de ce site.
+- **Le chat ne gère aucune session** (confirmé par l'équipe du chat) : tout vient du site hôte. Il ne devrait donc poser ni cookie ni stockage local de son côté (à vérifier en recette).
 
 ### CSP (dans `vercel.json`)
 
@@ -77,6 +79,7 @@ src/
     Footer.astro
   scripts/chat-frame.ts        résolution de l'URL de l'iframe (voir plus bas)
   lib/municipality.ts          validation du code commune
+  lib/user-id.ts               génération + cookie du userID
   styles/
     tokens.css                 tokens Tandem adaptés (voir plus bas)
     fonts.css                  @font-face Manrope (fichiers locaux)
@@ -179,9 +182,34 @@ Ordre de résolution du code commune :
 - Construire l'URL avec l'API `URL` / `searchParams.set`, jamais par concaténation de chaînes.
 - Le **nom du paramètre côté chat est configurable** (`PUBLIC_CHAT_MUNICIPALITY_PARAM`), car il diffère selon les versions : `municipality_code` (ancienne app) ou `commune` (v2). L'URL d'exemple de la v2 contient aussi `institutionId` et `conseilView`, mais **leur rôle et leur caractère obligatoire ne sont pas vérifiés** (aucun accès au code de la v2) : à confirmer auprès de l'équipe du chat avant de décider de la liste blanche.
 - Autres paramètres relayés : **liste blanche** uniquement (à définir selon l'app chat cible). Rien d'autre ne passe de l'URL parente vers l'iframe.
-- L'`<iframe>` est rendu **sans `src`**. Le script le renseigne tout de suite, ce qui évite un double chargement. Un `<noscript>` contient un iframe avec le code par défaut.
+- L'`<iframe>` est rendu **sans `src`**. Le script le renseigne tout de suite, ce qui évite un double chargement. Pas d'iframe de repli dans un `<noscript>` tant que l'on ne sait pas si le `userID` est obligatoire pour le chat (sans JavaScript, il ne peut pas être généré). Si le `userID` est obligatoire, afficher dans `<noscript>` un simple message invitant à activer JavaScript.
 - État de chargement léger (skeleton) tant que l'iframe n'a pas émis `load`.
 - Accessibilité : `title` explicite sur l'iframe. Attribut `allow` limité au strict nécessaire (ex. `clipboard-write`). Pas de `sandbox` tant que le chat n'est pas testé avec.
+
+### Identifiant utilisateur (`userID`)
+
+Décision de l'équipe du chat : **l'iframe ne gère pas de session**. Elle attend un `userID` fourni par le site hôte, **généré aléatoirement et stocké dans un cookie côté site**, pour être resservi aux visites suivantes.
+
+Fonctionnement dans `src/scripts/chat-frame.ts` (via `src/lib/user-id.ts`), **avant** de renseigner le `src` de l'iframe :
+
+1. Lire le cookie `userID` (nom exact défini en constante).
+2. Si absent **ou invalide** (format UUID v4 attendu, valider par regex) : générer un nouvel identifiant avec `crypto.randomUUID()` et l'écrire dans le cookie.
+3. Ajouter l'identifiant à l'URL de l'iframe, via `searchParams.set` (nom du paramètre configurable : `PUBLIC_CHAT_USER_ID_PARAM`).
+4. Si l'écriture du cookie échoue (cookies bloqués) : continuer avec un identifiant **éphémère** (valable pour la page seulement), sans erreur visible.
+
+Attributs du cookie (posé en JavaScript, donc **sans** `HttpOnly`) :
+
+- `Path=/`, `Secure`, `SameSite=Lax`
+- `Max-Age` : durée **à fixer** (valeur provisoire : 12 mois), variable `PUBLIC_USER_ID_COOKIE_MAX_AGE` en secondes
+- pas de `Domain` explicite (le cookie reste lié au domaine exact du site)
+
+Règles :
+
+- Générer l'identifiant **côté navigateur uniquement** (le site est statique, pas de code serveur ni de middleware).
+- Ne jamais logguer ni afficher le `userID`.
+- Le `userID` est un identifiant **pseudonyme, pas une authentification** : l'équipe du chat ne doit pas lui accorder de confiance de sécurité (n'importe qui peut en forger un).
+- Mécanisme de transmission **à confirmer avec l'équipe du chat** : paramètre d'URL (hypothèse de travail), ou `postMessage`. Un paramètre d'URL apparaît dans les logs du serveur du chat.
+- **RGPD / ePrivacy** : l'ajout d'un cookie change l'analyse faite jusqu'ici (« aucun cookie »). Savoir si ce cookie peut être posé sans consentement, quelle durée de vie retenir, et s'il faut mettre à jour mentions légales et politique de confidentialité est à valider avec la personne en charge du volet juridique.
 
 ### Variables d'environnement (`.env.example`)
 
@@ -192,18 +220,24 @@ PUBLIC_CHAT_URL=https://app.chatvote.org/chat
 PUBLIC_CHAT_MUNICIPALITY_PARAM=municipality_code
 # Commune par défaut (V1 : Saint-Saturnin)
 PUBLIC_DEFAULT_MUNICIPALITY_CODE=63396
+# Identifiant utilisateur : nom du paramètre attendu par le chat (à confirmer)
+PUBLIC_CHAT_USER_ID_PARAM=userID
+# Durée de vie du cookie userID, en secondes (provisoire : 12 mois)
+PUBLIC_USER_ID_COOKIE_MAX_AGE=31536000
 # Liens à définir plus tard
 PUBLIC_DONATE_URL=
 PUBLIC_LOGO_HREF=
 ```
 
-Résultat attendu en V1 : l'iframe pointe sur `https://app.chatvote.org/chat?municipality_code=63396`.
+Résultat attendu en V1 : l'iframe pointe sur `https://app.chatvote.org/chat?municipality_code=63396&userID=<uuid>` (noms de paramètres provisoires).
 
 ## Points d'attention (côté équipe du chat, hors périmètre de ce repo)
 
 - Le chat doit autoriser notre domaine via `Content-Security-Policy: frame-ancestors` et ne pas envoyer `X-Frame-Options: DENY`, sinon l'iframe reste vide.
-- Chat et site sont sur des **domaines différents** : les cookies du chat dans l'iframe sont des cookies tiers (restrictions Safari/Firefox, `SameSite=None; Secure` nécessaire). Impact possible sur l'authentification du chat.
-- Les cookies/stockage éventuels du chat peuvent nécessiter une information ou un consentement des utilisateurs (à vérifier côté RGPD).
+- **Pas de session côté chat** (confirmé) : les problèmes de cookies tiers en iframe cross-domain (Safari/Firefox) ne devraient plus se poser, **à condition que le chat ne pose aucun cookie ni stockage local**. À vérifier en recette.
+- Confirmer avec l'équipe du chat le **mécanisme et le nom** de transmission du `userID` (paramètre d'URL ou `postMessage`), son format attendu (UUID v4 ?) et s'il est **obligatoire**.
+- Rappeler que le `userID` est un identifiant pseudonyme et non une authentification.
+- Le cookie `userID` est posé par le site : l'information des utilisateurs (mentions légales, confidentialité) est à traiter côté site (voir « À trancher plus tard »).
 - SEO : le contenu de l'iframe n'est pas attribué à notre page. Soigner `title`, `description`, Open Graph, et prévoir un court contenu de repli.
 - Synchronisation thème/URL entre site et chat via `postMessage` : évolution possible, **pas en V1**.
 
@@ -219,14 +253,17 @@ Résultat attendu en V1 : l'iframe pointe sur `https://app.chatvote.org/chat?mun
 1. Scaffolding : `pnpm create astro@latest` (Astro 7.x), TS strict, Biome, `.nvmrc`, `.env.example`, repo Git.
 2. Tokens CSS, polices locales, layout de base, logo SVG local.
 3. Bandeau, header (placeholder + logo), footer.
-4. `ChatFrame` + `chat-frame.ts` + `lib/municipality.ts` (avec tests unitaires de la validation).
+4. `ChatFrame` + `chat-frame.ts` + `lib/municipality.ts` + `lib/user-id.ts` (avec tests unitaires de la validation du code commune et de la gestion du cookie `userID`).
 5. `vercel.json` (CSP, headers), déploiement Vercel avec previews par branche.
 6. Recette (ci-dessous).
 
 ## Critères de recette
 
 - Au chargement, l'onglet Réseau n'affiche **aucune requête** vers un domaine autre que le nôtre et celui du chat.
-- **Aucun cookie** n'est posé par notre domaine.
+- Notre domaine pose **exactement un cookie** (`userID`), avec les attributs prévus (`Secure`, `SameSite=Lax`, `Path=/`, durée voulue), et **aucun** `localStorage`/`sessionStorage`.
+- Premier chargement : un `userID` (UUID v4) est créé et transmis à l'iframe. Rechargement : **le même** `userID` est réutilisé. Cookie supprimé ou valeur invalide : un nouvel identifiant valide est généré.
+- Cookies bloqués par le navigateur : le site fonctionne quand même (identifiant éphémère), sans erreur.
+- Le chat dans l'iframe **ne pose aucun cookie**.
 - `/` charge l'iframe sur le code `63396` ; `/?municipalityCode=63001` charge `63001` ; `/?municipalityCode=abc` retombe sur `63396`.
 - Pas de défilement parasite sur mobile (iOS Safari, Chrome Android) : l'iframe remplit exactement l'espace entre header et footer.
 - Lighthouse et accessibilité corrects (contrastes, `title` de l'iframe, focus visible).
@@ -240,6 +277,7 @@ Résultat attendu en V1 : l'iframe pointe sur `https://app.chatvote.org/chat?mun
 - Contenu final du header.
 - Pages légales (mentions légales, confidentialité).
 - Logo dans le footer.
-- Cookie de session éventuel.
+- Durée de vie définitive du cookie `userID`, nom du cookie, et analyse RGPD/ePrivacy (consentement, mentions légales, politique de confidentialité).
+- Transmission du `userID` au chat : paramètre d'URL ou `postMessage`, nom du paramètre, format attendu, caractère obligatoire.
 - Nom du repo et organisation Vercel.
 - Domaine cible du site.
