@@ -6,20 +6,28 @@ const moreUrl = import.meta.env.PUBLIC_MORE_URL;
 
 <div class="bar">
   <p class="text">
-    <span class="long">ChatVote est une initiative associative open source et souveraine - la fiabilité de l'information fournie est notre priorité. Version 1.0</span>
+    <span class="long">ChatVote est une initiative associative open source et souveraine - la fiabilité de l'information fournie est notre priorité. Version 1.1</span>
     <span class="medium">ChatVote - open source et souveraine</span>
     <span class="short">ChatVote - open source et souveraine. V1.0</span>
   </p>
   <div class="actions">
-    {moreUrl && <a class="more" href={moreUrl}>En savoir plus</a>}
     {
+      moreUrl && (
+        <a class="more" href={moreUrl} target="_blank" rel="noopener noreferrer">
+          En savoir plus<span class="sr-only"> (s'ouvre dans un nouvel onglet)</span>
+        </a>
+      )
+    }
+    {
+      
       donateUrl && (
-        <a class="donate" href={donateUrl}>
+        <a class="donate" href={donateUrl} target="_blank" rel="noopener noreferrer">
           <svg class="heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
           </svg>
           <span class="donate-long">Aidez-nous à aider la démocratie !</span>
           <span class="donate-short">Soutenir</span>
+          <span class="sr-only"> (s'ouvre dans un nouvel onglet)</span>
         </a>
       )
     }
@@ -34,9 +42,9 @@ const moreUrl = import.meta.env.PUBLIC_MORE_URL;
     gap: var(--space-2);
     width: 100%;
     padding: var(--space-2) var(--space-3);
-    background: var(--surface-200);
+    background: var(--surface-indigo);
     border-bottom: 1px solid var(--border);
-    color: var(--ink-secondary);
+    color: var(--ink);
   }
 
   .text {
@@ -88,6 +96,15 @@ const moreUrl = import.meta.env.PUBLIC_MORE_URL;
 
   .donate:hover {
     background: color-mix(in srgb, var(--brand-orange) 80%, transparent);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .heart {
