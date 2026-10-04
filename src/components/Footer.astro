@@ -4,6 +4,7 @@ const year = new Date().getFullYear();
 
 <footer class="footer">
   <p>© {year} TANDEM — Tech &amp; Démocratie</p>
+  <p class="beta">Version 1.1 BETA en cours de développement</p>
   <p>Association loi 1901 · Saint-Saturnin</p>
 </footer>
 
@@ -18,8 +19,14 @@ const year = new Date().getFullYear();
     color: var(--ink-secondary);
     font-size: var(--body-sm-size);
     line-height: var(--body-sm-line);
+   
+    .beta {
+    color: var(--ink);
+    font-style: italic;
+  }
   }
 
+  
   @media (min-width: 640px) {
     .footer {
       flex-direction: row;
