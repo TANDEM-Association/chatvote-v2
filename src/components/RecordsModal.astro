@@ -1,0 +1,78 @@
+---
+// Modale qui recouvre le chat (mais ni le header ni le footer).
+// Contenu à définir : pour l'instant un emplacement vide.
+---
+
+<div class="modal" id="records-modal" data-records-modal role="dialog" aria-label="Comptes rendus" inert>
+  <button type="button" class="close" data-records-close aria-label="Fermer les comptes rendus">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  </button>
+  <div class="content" data-records-content></div>
+</div>
+
+<script>
+  import "../scripts/records-modal";
+</script>
+
+<style>
+  /* Contenu en thème clair (comme le chat), indépendant du thème sombre du site. */
+  .modal {
+    --modal-bg: #f8f8ff;
+    --modal-ink: #11103a;
+    --modal-ink-secondary: #5b5b7a;
+    --modal-border: #e4e4f2;
+
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    background: var(--modal-bg);
+    color: var(--modal-ink);
+    color-scheme: light;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.15s ease,
+      visibility 0.15s;
+
+    &[data-open] {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+
+  .close {
+    position: absolute;
+    top: var(--space-2);
+    inset-inline-end: var(--space-2);
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    background: var(--modal-bg);
+    border: 1px solid var(--modal-border);
+    border-radius: var(--radius-full);
+    color: var(--modal-ink);
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--modal-ink-secondary);
+    }
+  }
+
+  .content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .modal {
+      transition: none;
+    }
+  }
+</style>

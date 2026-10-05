@@ -1,4 +1,6 @@
 ---
+import ViewToggle from "./ViewToggle.astro";
+
 // Logo ChatVote « par » logo Tandem. Contenu final à définir avec le porteur du projet.
 // TODO: PUBLIC_LOGO_HREF à définir (clic sur le logo ChatVote) ; vide = logo sans lien.
 const logoHref = import.meta.env.PUBLIC_LOGO_HREF;
@@ -19,6 +21,7 @@ const logoTandemHref = import.meta.env.PUBLIC_LOGO_TANDEM_HREF;
   <a class="brand" href={logoTandemHref} target="_blank" rel="noopener noreferrer" aria-label="Tandem (s'ouvre dans un nouvel onglet)" >
   <img class="tandem" src="/tandem-logo.svg" alt="Tandem, tech et démocratie" width="402" height="140" />
   </a>
+  <ViewToggle />
 </header>
 
 <style>

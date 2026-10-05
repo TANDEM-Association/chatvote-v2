@@ -1,0 +1,80 @@
+---
+// Bascule « Comptes rendus » / « Assistant IA ». Piloté par records-modal.ts.
+---
+
+<div class="toggle">
+  <button type="button" class="tab" data-view-tab="records" aria-pressed="false" aria-controls="records-modal">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6M8 13h8M8 17h8" />
+    </svg>
+    <span class="label">Comptes rendus</span>
+  </button>
+  <button type="button" class="tab" data-view-tab="chat" aria-pressed="true" aria-controls="records-modal">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+    <span class="label">Assistant IA</span>
+  </button>
+</div>
+
+<style>
+  .toggle {
+    display: flex;
+    gap: var(--space-1);
+    margin-inline-start: auto;
+    padding: var(--space-1);
+    background: var(--surface-200);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+  }
+
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-full);
+    color: var(--ink-secondary);
+    font-size: var(--body-sm-size);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+
+    &[aria-pressed="true"] {
+      background: var(--surface-100);
+      border-color: var(--border);
+      color: var(--ink);
+    }
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
+
+  /* Mobile : icônes seules (le libellé reste lu par les lecteurs d'écran). */
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  @media (min-width: 560px) {
+    .tab {
+      padding: var(--space-2) var(--space-4);
+    }
+
+    .label {
+      position: static;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      clip-path: none;
+    }
+  }
+</style>
