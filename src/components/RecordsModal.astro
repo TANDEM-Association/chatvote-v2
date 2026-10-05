@@ -1,15 +1,21 @@
 ---
 // Modale qui recouvre le chat (mais ni le header ni le footer).
-// Contenu à définir : pour l'instant un emplacement vide.
+// Vue liste en place ; la vue détail viendra ensuite.
+import RecordsList from "./RecordsList.astro";
 ---
 
 <div class="modal" id="records-modal" data-records-modal role="dialog" aria-label="Comptes rendus" inert>
-  <button type="button" class="close" data-records-close aria-label="Fermer les comptes rendus">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-      <path d="M18 6 6 18M6 6l12 12" />
-    </svg>
-  </button>
-  <div class="content" data-records-content></div>
+  <div class="bar">
+    <h2 class="heading">Comptes rendus</h2>
+    <button type="button" class="close" data-records-close aria-label="Fermer les comptes rendus">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M18 6 6 18M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+  <div class="content" data-records-content>
+    <RecordsList />
+  </div>
 </div>
 
 <script>
@@ -44,11 +50,22 @@
     }
   }
 
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-2) var(--gutter);
+    border-bottom: 1px solid var(--modal-border);
+  }
+
+  .heading {
+    font-size: var(--body-lg-size);
+    font-weight: 700;
+    line-height: var(--body-lg-line);
+  }
+
   .close {
-    position: absolute;
-    top: var(--space-2);
-    inset-inline-end: var(--space-2);
-    z-index: 1;
     display: grid;
     place-items: center;
     width: 2.75rem;
