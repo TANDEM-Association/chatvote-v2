@@ -30,6 +30,9 @@ export default defineConfig({
     inlineStylesheets: "never",
   },
   vite: {
+    // Dev uniquement : Vite ne répond au CORS (dont le preflight OPTIONS) que pour
+    // les origines localhost. L'iframe Zaq (ngrok) en est une autre.
+    server: { cors: true },
     build: {
       // Astro inline les petits scripts : interdit par script-src 'self'.
       assetsInlineLimit: 0,
