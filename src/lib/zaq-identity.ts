@@ -8,7 +8,8 @@ export {
 } from "./zaq-ids";
 
 /** Contexte transmis au chat (V1 : une seule commune). */
-export const PROMPT_CONTEXT = "Je vais te poser des questions sur la ville de Saint-Saturnin dont le code postal est 63450";
+export const PROMPT_CONTEXT =
+  "Je vais te poser des questions sur la ville de Saint-Saturnin dont le code postal est 63450";
 
 /** Durée de validité du jeton, en secondes (Zaq accepte 300 au maximum). */
 export const TOKEN_TTL_SECONDS = 240;
