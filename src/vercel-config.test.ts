@@ -11,16 +11,20 @@ const header = (key: string) =>
   vercel.headers.flatMap((h) => h.headers).find((h) => h.key === key)?.value ??
   "";
 
-const chatOrigin = new URL(
-  /^PUBLIC_CHAT_URL=(.+)$/m.exec(read("../.env.example"))?.[1] ?? "",
-).origin;
+const zaqUrl = new URL(
+  /^PUBLIC_ZAQ_URL=(.+)$/m.exec(read("../.env.example"))?.[1] ?? "",
+);
+const zaqOrigin = zaqUrl.origin;
+const zaqWebSocket = `wss://${zaqUrl.host}`;
 
 describe("vercel.json", () => {
   const csp = header("Content-Security-Policy");
 
-  it("autorise en iframe exactement l'origine du chat de .env.example", () => {
-    expect(csp).toContain(`frame-src ${chatOrigin};`);
-    expect(header("Permissions-Policy")).toContain(`"${chatOrigin}"`);
+  it("autorise exactement l'origine Zaq de .env.example (script, iframe, API, WebSocket)", () => {
+    expect(csp).toContain(`script-src 'self' ${zaqOrigin};`);
+    expect(csp).toContain(`frame-src ${zaqOrigin};`);
+    expect(csp).toContain(`connect-src 'self' ${zaqOrigin} ${zaqWebSocket};`);
+    expect(header("Permissions-Policy")).toContain(`"${zaqOrigin}"`);
   });
 
   it("n'utilise ni unsafe-inline, ni unsafe-eval, ni joker", () => {
