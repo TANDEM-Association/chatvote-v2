@@ -7,3 +7,6 @@ dist/
 !.env.example
 .DS_Store
 node_modules
+
+# Notes internes (ne pas pousser)
+SECURITY-AUDIT.md
