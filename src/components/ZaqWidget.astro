@@ -8,8 +8,8 @@ const zaqEmbedUrl = new URL(
 );
 ---
 
-<div class="stage" data-zaq-stage>
-  <!-- Accueil affiché derrière l'iframe (transparente) tant qu'aucune conversation n'a commencé -->
+<div class="stage">
+  <!-- Accueil : le widget Zaq le recouvre dès qu'on l'utilise -->
   <div class="welcome">
     <img
       class="welcome-logo"
@@ -73,10 +73,6 @@ const zaqEmbedUrl = new URL(
     font-size: var(--body-md-size);
     line-height: var(--body-md-line);
     text-wrap: balance;
-  }
-
-  .stage[data-started] .welcome {
-    display: none;
   }
 
   @media (min-width: 768px) {

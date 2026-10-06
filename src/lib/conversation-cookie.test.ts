@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   buildConversationCookie,
-  hasConversationCookie,
   storeConversationId,
 } from "./conversation-cookie";
 
@@ -33,21 +32,5 @@ describe("storeConversationId", () => {
       },
     };
     expect(storeConversationId(jar, "42", 100)).toBe(false);
-  });
-});
-
-describe("hasConversationCookie", () => {
-  it("détecte une conversation valide parmi d'autres cookies", () => {
-    expect(hasConversationCookie("a=1; conversationId=42; b=2")).toBe(true);
-  });
-
-  it.each([
-    "",
-    "a=1",
-    "conversationId=",
-    "conversationId=a b",
-    "xconversationId=42",
-  ])("renvoie false pour %j", (value) => {
-    expect(hasConversationCookie(value)).toBe(false);
   });
 });
