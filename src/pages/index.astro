@@ -1,5 +1,5 @@
 ---
-import ChatFrame from "../components/ChatFrame.astro";
+// import ChatFrame from "../components/ChatFrame.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
@@ -7,5 +7,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   title="ChatVote - Posez vos questions sur les programmes municipaux"
   description="ChatVote est une initiative associative open source et souveraine pour s'informer sur les programmes des élections municipales."
 >
-  <ChatFrame />
+  <!-- <ChatFrame /> -->
+   <div id="iframe-zaq"></div>
+  <!-- TODO: test ZAQ (URL ngrok temporaire), voir ZAQ-WIDGET-INTEGRATION.en.md -->
+  <script
+    is:inline
+    src="https://3f64-185-83-86-177.ngrok-free.app/web_widget/assets/embed.js"
+    data-widget-id="13"
+    defer></script>
 </BaseLayout>
