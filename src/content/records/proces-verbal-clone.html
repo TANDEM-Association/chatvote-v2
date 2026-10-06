@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Procès-verbal du 2026-05-27 — Saint-Saturnin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ───────── Variables (valeurs relevées sur la page, thème clair) ───────── */
+    :root {
+      --bg:          lab(97.5966 0.880867 -3.66855);
+      --fg:          lab(1.34494 8.59319 -20.7166);
+      --muted-fg:    lab(39.1818 5.57236 -17.7893);
+      --primary:     lab(30.6992 56.733 -96.3628);
+      --icon:        lab(28.0889 19.6526 -39.4897);
+      --card:        lab(100 0 0);
+      --chip-border: lab(85.7227 3.86894 -14.4794);
+
+      --border-60: oklab(0.879997 0.00966704 -0.0387892 / 0.6);
+      --border-50: oklab(0.879997 0.00966704 -0.0387892 / 0.5);
+      --border-40: oklab(0.879997 0.00966704 -0.0387892 / 0.4);
+
+      --muted-30: oklab(0.939998 0.00482851 -0.0193829 / 0.3);
+      --muted-20: oklab(0.939998 0.00482851 -0.0193829 / 0.2);
+      --muted-10: oklab(0.939998 0.00482851 -0.0193829 / 0.1);
+
+      --subtle-60: oklab(0.479998 0.0120896 -0.0485011 / 0.6);
+      --subtle-30: oklab(0.479998 0.0120896 -0.0485011 / 0.3);
+
+      --chip-bg:     oklab(0.449986 0.0046894 -0.269941 / 0.05);
+      --chip-line:   oklab(0.449986 0.0046894 -0.269941 / 0.4);
+      --card-ring:   oklab(0.129996 0.0193477 -0.0776182 / 0.1);
+    }
+
+    /* ───────── Reset minimal (remplace le « preflight » de Tailwind) ───────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Geist", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; color: inherit; background: none; cursor: pointer; text-align: center; }
+    a { color: inherit; text-decoration: none; }
+    h1, h2, h3 { font: inherit; }
+    svg { display: block; flex-shrink: 0; vertical-align: middle; fill: none; stroke: currentColor;
+          stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ───────── Coque de page ───────── */
+    .cr-app  { display: flex; flex-direction: column; min-height: 100vh; }
+    .cr-main { flex: 1 1 0%; }
+
+    /* ───────── Barre de navigation ───────── */
+    .cr-nav {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+      height: 56px; padding: 0 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border-60);
+    }
+    .cr-commune {
+      display: flex; align-items: center; gap: 10px; height: 44px; min-width: 0;
+      padding: 0 10px 0 12px; text-align: left;
+      background: var(--muted-20);
+      border: 1px solid var(--border-50); border-radius: 14px;
+    }
+    .cr-commune__pin     { width: 16px; height: 16px; color: var(--icon); }
+    .cr-commune__text    { display: flex; flex-direction: column; min-width: 0; line-height: 20px; }
+    .cr-commune__label   { font-size: 10px; line-height: 12.5px; letter-spacing: .25px; text-transform: uppercase; color: var(--muted-fg); }
+    .cr-commune__name    { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cr-commune__chevron { width: 16px; height: 16px; color: var(--muted-fg); }
+
+    .cr-tabs {
+      display: flex; align-items: center; gap: 2px; height: 44px; padding: 2px; margin-left: auto;
+      background: var(--muted-20);
+      border: 1px solid var(--border-50); border-radius: 10px;
+    }
+    .cr-tab {
+      display: flex; align-items: center; gap: 6px; padding: 0 10px;
+      font-size: 12px; line-height: 16px; white-space: nowrap;
+      color: var(--muted-fg); background: transparent; border-radius: 8px;
+    }
+    .cr-tab svg { width: 14px; height: 14px; }
+    .cr-tab.is-active {
+      color: inherit; font-weight: 500; background: var(--bg);
+      box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
+    }
+
+    /* ───────── En-tête du PV ───────── */
+    .cr-head { padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--border-60); }
+    .cr-head__row { display: flex; align-items: flex-start; gap: 12px; }
+    .cr-back { flex-shrink: 0; margin-top: 2px; color: var(--muted-fg); }
+    .cr-head__text  { display: flex; flex-direction: column; flex: 1 1 0%; gap: 4px; min-width: 0; }
+    .cr-head__title { font-size: 14px; font-weight: 500; line-height: 19.25px; }
+    .cr-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; color: var(--muted-fg); }
+    .cr-meta__sep  { opacity: .4; }
+    .cr-meta__link { display: flex; align-items: center; gap: 4px; color: var(--primary); cursor: pointer; }
+    .cr-meta__link svg { width: 12px; height: 12px; }
+
+    /* ───────── Sujets dans le temps ───────── */
+    .cr-threads {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 16px;
+      background: var(--muted-10); border-bottom: 1px solid var(--border-40);
+    }
+    .cr-threads__label { display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: var(--muted-fg); }
+    .cr-threads__label svg { width: 14px; height: 14px; }
+    .cr-chip {
+      padding: 4px 12px; font-size: 12px; line-height: 16px; color: var(--primary);
+      background: var(--chip-bg); border: 1px solid var(--chip-line); border-radius: 9999px;
+    }
+
+    /* ───────── Document (Markdown rendu) ───────── */
+    .cr-md { padding: 16px; background: var(--muted-20); border-bottom: 1px solid var(--border-40); }
+    .cr-md > :first-child { margin-top: 0; }
+    .cr-md > :last-child  { margin-bottom: 0; }
+    .cr-md h1 { font-size: 30px; font-weight: 600; line-height: 36px; margin: 0 0 8px; }
+    .cr-md h2 { font-size: 24px; font-weight: 600; line-height: 32px; margin: 24px 0 8px; }
+    .cr-md h3 { font-size: 20px; font-weight: 600; line-height: 28px; margin: 24px 0 8px; }
+    .cr-md > p, .cr-md > ul { margin-bottom: 16px; }
+    .cr-md ul { list-style: disc inside; }
+    .cr-md li { padding: 4px 0; }
+    .cr-md strong { font-weight: 600; }
+    .cr-md a { font-weight: 500; color: var(--primary); text-decoration: underline; overflow-wrap: anywhere; }
+    .cr-md blockquote {
+      margin: 16px 0; padding-left: 16px; font-style: italic; color: var(--muted-fg);
+      border-left: 4px solid var(--subtle-30);
+    }
+
+    /* ───────── Cartes des délibérations ───────── */
+    .cr-cards { display: flex; flex-direction: column; gap: 8px; padding: 16px; }
+    .cr-card  { box-shadow: 0 0 0 1px var(--card-ring); }
+    .cr-card__head {
+      display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--card);
+    }
+    .cr-card__num {
+      flex-shrink: 0; margin-top: 2px; font-size: 10px; line-height: 15px;
+      font-variant-numeric: tabular-nums; color: var(--subtle-60);
+    }
+    .cr-card__main     { display: flex; flex-direction: column; flex: 1 1 0%; gap: 8px; min-width: 0; }
+    .cr-card__titlerow { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+    .cr-card__title    { flex: 1 1 0%; min-width: 0; font-size: 14px; font-weight: 500; line-height: 19.25px; }
+    .cr-card__badges   { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .cr-badge {
+      display: flex; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;
+      height: 20px; padding: 2px 8px; overflow: hidden;
+      font-size: 12px; font-weight: 500; line-height: 16px; white-space: nowrap;
+      border: 1px solid var(--chip-border);
+    }
+    .cr-amount { display: flex; align-items: center; gap: 4px; font-size: 10px; line-height: 15px; color: var(--muted-fg); }
+    .cr-amount svg { width: 12px; height: 12px; }
+    .cr-card__toggle { flex-shrink: 0; margin-top: 2px; color: var(--subtle-60); }
+    .cr-card__toggle svg { width: 16px; height: 16px; }
+    .cr-card__body { padding: 12px 16px; background: var(--muted-30); border-top: 1px solid var(--border-50); }
+    .cr-card__body p { font-size: 12px; line-height: 19.5px; color: var(--muted-fg); }
+    .cr-card.is-collapsed .cr-card__body { display: none; }
+  </style>
+</head>
+<body>
+<div class="cr-app">
+
+  <!-- Barre de navigation -->
+  <nav class="cr-nav" aria-label="Navigation du conseil municipal">
+    <button class="cr-commune" type="button">
+      <svg class="cr-commune__pin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+      <span class="cr-commune__text">
+        <span class="cr-commune__label">Commune</span>
+        <span class="cr-commune__name">Saint-Saturnin</span>
+      </span>
+      <svg class="cr-commune__chevron" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+
+    <div class="cr-tabs" role="group">
+      <button class="cr-tab is-active" type="button" aria-label="Comptes rendus">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+        <span>Comptes rendus</span>
+      </button>
+      <button class="cr-tab" type="button" aria-label="Assistant IA">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>
+        <span>Assistant IA</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="cr-main">
+
+    <!-- En-tête du procès-verbal -->
+    <header class="cr-head">
+      <div class="cr-head__row">
+        <button class="cr-back" type="button" aria-label="Retour à la liste">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        </button>
+        <div class="cr-head__text">
+          <h1 class="cr-head__title">Procès-verbal du 2026-05-27</h1>
+          <div class="cr-meta">
+            <span>27 mai 2026</span>
+            <span class="cr-meta__sep">·</span>
+            <span>8 délibérations</span>
+            <span class="cr-meta__sep">·</span>
+            <a class="cr-meta__link" href="https://www.saint-saturnin63.fr/wp-content/uploads/2026/07/CM-2026-05-28-Compte-rendu-pour-diffusion.pdf" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+              Document original
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sujets dans le temps -->
+    <div class="cr-threads">
+      <div class="cr-threads__label">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+        <span>Sujets dans le temps :</span>
+      </div>
+      <button class="cr-chip" type="button">Délibérations génériques (approbations et rajout)</button>
+      <button class="cr-chip" type="button">Désignations fonctionnelles du conseil municipal mai 2026</button>
+      <button class="cr-chip" type="button">Non‑préemption de parcelles ZP 227, ZP 87, ZL 14, ZS 190, ZS 120 et 11 rue de Rochemanie</button>
+      <button class="cr-chip" type="button">Non‑préemption parcelles ZP 227, ZP 87, ZL 14, ZS 190, ZS 120</button>
+    </div>
+
+    <!-- Document (rendu du Markdown) -->
+    <section class="cr-md">
+      <h1>Conseil municipal de Saint‑Saturnin — Séance du 27 mai 2026</h1>
+      <blockquote><p>Engagement éthique : neutralité totale, aucune interprétation, fidélité stricte aux comptes rendus originaux. Sources officielles – fiabilité 100%.</p></blockquote>
+      <p>📄 <a href="https://www.saint-saturnin63.fr/wp-content/uploads/2026/07/CM-2026-05-28-Compte-rendu-pour-diffusion.pdf" target="_blank" rel="noopener">Document original (compte rendu officiel)</a></p>
+
+      <h2>🟢 Huis clos</h2>
+      <h3>Huis‑clos – Non‑préemption parcelles ZP 227 et ZP 87</h3>
+      <p>➡️ Non‑préemption parcelles ZP 227 et ZP 87</p>
+      <ul><li>Vote : presentee</li></ul>
+      <h3>Huis‑clos – Non‑préemption parcelle ZL 14</h3>
+      <p>➡️ Non‑préemption parcelle ZL 14</p>
+      <ul><li>Vote : presentee</li></ul>
+
+      <h2>🟢 Points publics</h2>
+      <h3>3. Approbation du compte‑rendu du 6 mai 2026</h3>
+      <ul><li>Vote : presentee</li></ul>
+      <h3>4. Rajout d’une délibération – 2026‑05‑D</h3>
+      <ul><li>Vote : presentee</li></ul>
+      <h3>5. 2026‑05‑A – Renouvellement ligne de trésorerie de 130 000 €</h3>
+      <ul><li>Vote : presentee</li></ul>
+      <h3>6. 2026‑05‑B – Ouverture ligne de trésorerie de 400 000 €</h3>
+      <ul><li>Vote : presentee</li></ul>
+      <h3>7. 2026‑05‑C – Renouvellement des commissions de contrôle des listes électorales</h3>
+      <ul><li>Vote : presentee</li></ul>
+      <h3>8. 2026‑05‑D – Désignation d’un correspondant défense</h3>
+      <ul><li>Vote : presentee</li></ul>
+
+      <h2>🗂️ Index thématique</h2>
+      <ul>
+        <li><strong>Comptes‑rendus</strong> : Approbation du compte‑rendu du 6 mai 2026</li>
+        <li><strong>Finances – Trésorerie</strong> : 2026‑05‑A – Renouvellement ligne de trésorerie de 130 000 €, 2026‑05‑B – Ouverture ligne de trésorerie de 400 000 €</li>
+        <li><strong>Élections – Contrôle des listes</strong> : 2026‑05‑C – Renouvellement des commissions de contrôle des listes électorales</li>
+        <li><strong>Défense civile</strong> : 2026‑05‑D – Désignation d’un correspondant défense</li>
+        <li><strong>Délibérations additionnelles</strong> : Rajout d’une délibération – 2026‑05‑D</li>
+      </ul>
+
+      <h2>🟢 Résumé citoyen</h2>
+      <p>Lors de la séance du 27 mai 2026, le conseil municipal a validé le compte‑rendu du 6 mai, a renouvelé et ouvert des lignes de trésorerie, a désigné un correspondant défense et a renouvelé les commissions de contrôle électoral. Deux décisions en huis‑clos ont concerné le non‑exercice du droit de préemption sur des parcelles en ZP et ZL.</p>
+    </section>
+
+    <!-- Cartes des délibérations -->
+    <section class="cr-cards">
+
+      <article class="cr-card">
+        <div class="cr-card__head">
+          <span class="cr-card__num">#1</span>
+          <div class="cr-card__main">
+            <div class="cr-card__titlerow"><span class="cr-card__title">Huis‑clos – Non‑préemption parcelles ZP 227 et ZP 87</span></div>
+            <div class="cr-card__badges"><span class="cr-badge">presentee</span></div>
+          </div>
+          <button class="cr-card__toggle" type="button" aria-label="Réduire le résumé"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        </div>
+        <div class="cr-card__body"><p>Lors d’une séance en huis‑clos, le conseil municipal a décidé de ne pas exercer son droit de préemption sur les parcelles situées dans les zones prioritaires ZP 227 et ZP 87. Cette décision ouvre la possibilité de céder ces terrains à des acquéreurs privés, conformément aux orientations du plan local d’urbanisme.</p></div>
+      </article>
+
+      <article class="cr-card">
+        <div class="cr-card__head">
+          <span class="cr-card__num">#2</span>
+          <div class="cr-card__main">
+            <div class="cr-card__titlerow"><span class="cr-card__title">Huis‑clos – Non‑préemption parcelle ZL 14</span></div>
+            <div class="cr-card__badges"><span class="cr-badge">presentee</span></div>
+          </div>
+          <button class="cr-card__toggle" type="button" aria-label="Réduire le résumé"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        </div>
+        <div class="cr-card__body"><p>Lors d’une séance en huis‑clos, le conseil municipal a examiné la demande de non‑préemption d’une parcelle située dans la zone ZL 14. La décision porte sur la renonciation de la commune à exercer son droit de préemption afin de permettre la vente du terrain à un acquéreur privé.</p></div>
+      </article>
+
+      <article class="cr-card">
+        <div class="cr-card__head">
+          <span class="cr-card__num">#3</span>
+          <div class="cr-card__main">
+            <div class="cr-card__titlerow"><span class="cr-card__title">Approbation du compte‑rendu du 6 mai 2026</span></div>
+            <div class="cr-card__badges"><span class="cr-badge">presentee</span></div>
+          </div>
+          <button class="cr-card__toggle" type="button" aria-label="Réduire le résumé"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        </div>
+        <div class="cr-card__body"><p>Le conseil municipal a validé le compte‑rendu de la séance du 6 mai 2026, confirmant que les délibérations et décisions prises lors de cette réunion sont conformes aux procès‑verbaux. Aucun commentaire supplémentaire n’a été formulé.</p></div>
+      </article>
+
+      <article class="cr-card">
+        <div class="cr-card__head">
+          <span class="cr-card__num">#4</span>
+          <div class="cr-card__main">
+            <div class="cr-card__titlerow"><span class="cr-card__title">Rajout d’une délibération – 2026‑05‑D</span></div>
+            <div class="cr-card__badges"><span class="cr-badge">presentee</span></div>
+          </div>
+          <button class="cr-card__toggle" type="button" aria-label="Réduire le résumé"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        </div>
+        <div class="cr-card__body"><p>Cette délibération consiste à ajouter un point supplémentaire à l'ordre du jour du conseil municipal du 2026‑05‑D. Aucun détail spécifique n’est fourni dans le titre, il s’agit donc simplement d’un rajout d’une délibération.</p></div>
+      </article>
+
+      <article class="cr-card">
+        <div class="cr-card__head">
+          <span class="cr-card__num">#5</span>
+          <div class="cr-card__main">
+            <div class="cr-card__titlerow"><span class="cr-card__title">2026‑05‑A – Renouvellement ligne de trésorerie de 130 000 €</span></div>
+            <div class="cr-card__badges">
+              <span class="cr-badge">presentee</span>
+              <span class="cr-amount"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M4 10h12"/><path d="M4 14h9"/><path d="M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2"/></svg>130 000 €</span>
+            </div>
+          </div>
+          <button class="cr-card__toggle" type="button" aria-label="Réduire le résumé"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        </div>
+        <div class="cr-card__body"><p>Le conseil municipal a examiné la proposition de renouvellement de la ligne de trésorerie d'un montant de 130 000 €, destinée à assurer la liquidité de la commune. Cette opération financière vise à garantir la continuité des paiements et à renforcer la capacité de financement à court terme. Aucun autre détail n'a été précisé dans le texte fourni.</p></div>
+      </article>
+
+      <article class="cr-card">
+        <div class="cr-card__head">
+          <span class="cr-card__num">#6</span>
+          <div class="cr-card__main">
+            <div class="cr-card__titlerow"><span class="cr-card__title">2026‑05‑B – Ouverture ligne de trésorerie de 400 000 €</span></div>
+            <div class="cr-card__badges">
+              <span class="cr-badge">presentee</span>
+              <span class="cr-amount"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M4 10h12"/><path d="M4 14h9"/><path d="M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2"/></svg>400 000 €</span>
+            </div>
+          </div>
+          <button class="cr-card__toggle" type="button" aria-label="Réduire le résumé"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        </div>
+        <div class="cr-card__body"><p>Le conseil municipal a voté l'ouverture d'une ligne de trésorerie d'un montant de quatre cent mille euros pour renforcer la liquidité de la commune. Cette mesure vise à assurer la continuité des services publics et à anticiper d'éventuels besoins de financement à court terme.</p></div>
+      </article>
+
+      <article class="cr-card">
+        <div class="cr-card__head">
+          <span class="cr-card__num">#7</span>
+          <div class="cr-card__main">
+            <div class="cr-card__titlerow"><span class="cr-card__title">2026‑05‑C – Renouvellement des commissions de contrôle des listes électorales</span></div>
+            <div class="cr-card__badges"><span class="cr-badge">presentee</span></div>
+          </div>
+          <button class="cr-card__toggle" type="button" aria-label="Réduire le résumé"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        </div>
+        <div class="cr-card__body"><p>Le conseil municipal a décidé de procéder au renouvellement des commissions de contrôle des listes électorales, afin d’assurer la conformité et la régularité des inscriptions avant les prochaines élections. De nouveaux membres sont désignés pour ces commissions, garantissant ainsi la continuité de la vérification des listes électorales.</p></div>
+      </article>
+
+      <article class="cr-card">
+        <div class="cr-card__head">
+          <span class="cr-card__num">#8</span>
+          <div class="cr-card__main">
+            <div class="cr-card__titlerow"><span class="cr-card__title">2026‑05‑D – Désignation d’un correspondant défense</span></div>
+            <div class="cr-card__badges"><span class="cr-badge">presentee</span></div>
+          </div>
+          <button class="cr-card__toggle" type="button" aria-label="Réduire le résumé"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        </div>
+        <div class="cr-card__body"><p>La délibération 2026‑05‑D porte sur la désignation d’un correspondant défense pour la commune, chargé de relayer les informations et de coordonner les actions liées à la défense civile. Cette mesure vise à renforcer la coopération avec les autorités nationales et à préparer la collectivité à d’éventuelles situations d’urgence.</p></div>
+      </article>
+
+    </section>
+  </main>
+</div>
+
+<script>
+  // Seul comportement JS conservé : replier / déplier le résumé d'une carte.
+  const UP = 'm18 15-6-6-6 6', DOWN = 'm6 9 6 6 6-6';
+  document.querySelectorAll('.cr-card__toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.cr-card');
+      const collapsed = card.classList.toggle('is-collapsed');
+      btn.setAttribute('aria-label', collapsed ? 'Développer le résumé' : 'Réduire le résumé');
+      btn.querySelector('path').setAttribute('d', collapsed ? DOWN : UP);
+    });
+  });
+</script>
+</body>
+</html>
