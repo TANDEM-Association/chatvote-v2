@@ -1,0 +1,33 @@
+/*
+ * Thème du widget Zaq (chargé DANS l'iframe via l'attribut stylesheet-url).
+ * Dérivé de src/styles/tokens.css (thème sombre unique) : à resynchroniser à la main.
+ * Propriétés documentées dans styling-guideline.md (Zaq). Hors @layer, pas de !important.
+ * Couleurs fixes (pas de light-dark()) : le site n'a qu'un thème sombre.
+ */
+
+/* Manrope : le chemin est relatif à CETTE feuille, donc servi par notre domaine.
+   Le chargement depuis l'iframe exige un en-tête CORS sur /fonts/* (voir vercel.json)
+   et que le font-src de la CSP du widget autorise notre domaine. */
+@font-face {
+  font-family: "Manrope";
+  src: url("/fonts/Manrope-Variable.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --zaq-widget-primary: #f2461a; /* --brand-orange */
+  --zaq-widget-on-primary: #170742; /* --surface-100 : contraste 4,95 (blanc : 3,71) */
+  --zaq-widget-background: #170742; /* --surface-100 */
+  --zaq-widget-text: #fbfbfb; /* --ink */
+  --zaq-widget-muted: rgba(251, 251, 251, 0.62); /* --ink-secondary */
+  --zaq-widget-composer-background: #2b1850; /* --surface-200 */
+  --zaq-widget-elevated: #3b2766;
+  --zaq-widget-accent-background: #2b1850;
+  --zaq-widget-border: rgba(251, 251, 251, 0.16); /* --border */
+  --zaq-widget-shadow: #00000040;
+
+  --zaq-widget-font-family: "Manrope", system-ui, sans-serif;
+  --zaq-widget-radius: 24px;
+}

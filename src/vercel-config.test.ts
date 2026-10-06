@@ -27,6 +27,14 @@ describe("vercel.json", () => {
     expect(header("Permissions-Policy")).toContain(`"${zaqOrigin}"`);
   });
 
+  it("autorise l'origine Zaq à charger les polices (CORS, feuille zaq-widget.css)", () => {
+    const fonts = vercel.headers.find((h) => h.source === "/fonts/(.*)");
+    expect(
+      fonts?.headers.find((h) => h.key === "Access-Control-Allow-Origin")
+        ?.value,
+    ).toBe(zaqOrigin);
+  });
+
   it("n'utilise ni unsafe-inline, ni unsafe-eval, ni joker", () => {
     expect(csp).not.toMatch(/unsafe-|\*/);
   });

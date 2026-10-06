@@ -53,11 +53,11 @@ Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/w
 - Le widget émet sur l'iframe `#zaq-widget` : `zaq:conversation` (`event.detail.conversation_id`, au premier message) et `zaq:authentication-required` (jeton expiré : récupérer un nouveau jeton et rappeler `init`).
 - Réglages : `zaq.widget.getSettings()` / `updateSettings({ theme, language })` (`theme` : light, dark, auto ; `language` : en, fr, ar).
 - Les **origines autorisées** (localhost:4321, previews Vercel, domaine final) se configurent dans le back-office Zaq (`/bo/channels/retrieval/web_widget`).
-- Le style du contenu du widget **ne peut pas être modifié depuis notre page** (iframe cross-origin) : seuls le conteneur et l'élément iframe sont stylables.
+- Le CSS de notre page **ne traverse pas l'iframe**. Le style du widget passe par l'attribut `stylesheet-url` de `embed.js` : la feuille est chargée **dans l'iframe** et définit les propriétés personnalisables `--zaq-widget-*` (couleurs, police, rayon, largeur max, marge ; voir `styling-guideline.md`, fourni par Zaq). Pas de `@layer`, pas de `!important`. L'URL relative est résolue contre l'origine de **notre** page ; les URL à l'intérieur de la feuille (polices) le sont contre la feuille. La CSP **du widget** doit autoriser notre domaine (`style-src`, `font-src`) : à vérifier avec Zaq, y compris pour chaque preview Vercel.
 
 ### Notre implémentation
 
-- `src/components/ZaqWidget.astro` : conteneur `#iframe-zaq`, script `embed.js` (URL construite depuis `PUBLIC_ZAQ_URL`, `data-widget-id` depuis `PUBLIC_ZAQ_WIDGET_ID`), script bundlé `zaq-widget.ts`, styles globaux du conteneur, et un **bloc d'accueil** (logo ChatVote + texte de présentation) placé derrière l'iframe, que le widget recouvre dès qu'on l'utilise.
+- `src/components/ZaqWidget.astro` : conteneur `#iframe-zaq`, script `embed.js` (URL construite depuis `PUBLIC_ZAQ_URL`, `data-widget-id` depuis `PUBLIC_ZAQ_WIDGET_ID`), `stylesheet-url="/zaq-widget.css"`, script bundlé `zaq-widget.ts`, styles globaux du conteneur, et un **bloc d'accueil** (logo ChatVote + texte de présentation) placé derrière l'iframe, que le widget recouvre dès qu'on l'utilise.
 - `src/scripts/zaq-widget.ts` : attend que `zaq.widget` existe, applique `updateSettings({ theme: "dark", language: "fr" })`, récupère un jeton via `POST /api/widget-identity`, appelle `init`, redemande un jeton sur `zaq:authentication-required`, et écrit le cookie `conversationId` sur `zaq:conversation`.
 - `src/pages/api/widget-identity.ts` (`prerender = false`) : POST same-origin uniquement (en-tête `Origin` vérifié), génère ou relit le `userID`, relit `conversationId`, signe le jeton, répond `{ identity_token }` avec `Cache-Control: no-store`.
 - `src/lib/zaq-identity.ts` (signature, serveur), `src/lib/zaq-ids.ts` (noms de cookies et validation, partagé serveur/navigateur, **sans import Node**), `src/lib/conversation-cookie.ts` (écriture du cookie dans le navigateur).
@@ -125,6 +125,7 @@ frame-ancestors 'none'
 
 - `<ORIGINE_ZAQ>` = origine exacte de `PUBLIC_ZAQ_URL`, jamais `*`. Elle est **écrite en dur** dans `vercel.json` : à mettre à jour quand l'URL Zaq change (`vercel-config.test.ts` vérifie la cohérence avec `.env.example`).
 - Pas de `'unsafe-inline'` : `build.inlineStylesheets: 'never'` et `vite.build.assetsInlineLimit: 0` dans `astro.config.mjs`, scripts bundlés en fichiers.
+- `/fonts/*` envoie `Access-Control-Allow-Origin: <ORIGINE_ZAQ>` : la police Manrope est chargée depuis l'iframe du widget (cross-origin, CORS requis). `/zaq-widget.css` a un cache court (1 h).
 - `Permissions-Policy` restrictive (avec `clipboard-write` pour l'origine Zaq), `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options: DENY`.
 - `img-src`, `style-src` et `font-src` devront peut-être inclure l'hôte Zaq : le guide ne les liste pas, à valider en recette.
 
@@ -150,6 +151,7 @@ src/
     base.css                   reset + styles globaux
 public/
   fonts/                       Manrope .woff2 + licence OFL
+  zaq-widget.css               thème du widget (propriétés --zaq-widget-*), servi tel quel, URL stable
   logo-chatvote.svg, tandem-logo.svg
   favicon.svg
 astro.config.mjs               adapter Vercel, schéma astro:env, options CSP-friendly

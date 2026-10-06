@@ -34,8 +34,16 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://3f64-185-83-86-177.ngrok-free.app"
         }
       ]
+    },
+    {
+      "source": "/zaq-widget.css",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
     }
   ]
 }
