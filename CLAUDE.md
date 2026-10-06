@@ -18,15 +18,15 @@ V1 : commune **Saint-Saturnin, code 63396**.
 
 ## ⚠️ Changement d'intégration en cours : widget Zaq (branche `chat-integration`)
 
-**Le chat n'est plus intégré via notre propre iframe** (`ChatFrame` + `chat-frame.ts`) mais via le **widget web Zaq**. Les sections « Iframe et code commune », « Identifiant utilisateur (`userID`) », la CSP, les contraintes de confidentialité et le tableau des décisions ci-dessous décrivent **l'ancienne approche** : là où elles contredisent cette section, **celle-ci prévaut** (réécriture complète à faire une fois les points ouverts tranchés).
+**Le chat n'est plus intégré via notre propre iframe** (`ChatFrame` + `chat-frame.ts`, **supprimés**) mais via le **widget web Zaq**. Les sections « Iframe et code commune », « Identifiant utilisateur (`userID`) », la CSP, les contraintes de confidentialité et le tableau des décisions ci-dessous décrivent **l'ancienne approche** : là où elles contredisent cette section, **celle-ci prévaut** (réécriture complète à faire une fois les points ouverts tranchés).
 
 Docs de référence : `ZAQ-WIDGET-INTEGRATION.en.md` (notre analyse), [guide d'intégration Zaq](https://github.com/www-zaq-ai/web_widget/blob/main/docs/integration-guideline.md), [Astro : rendu à la demande](https://docs.astro.build/en/guides/on-demand-rendering/).
 
 ### État actuel
 
-- `src/pages/index.astro` : `<ChatFrame />` reste **commenté (à laisser tel quel)** ; la page rend `<ZaqWidget />` (`src/components/ZaqWidget.astro`), qui contient le conteneur `<div id="iframe-zaq">`, le script `embed.js` (URL construite depuis `PUBLIC_ZAQ_URL`, **ngrok temporaire** ; `data-widget-id` depuis `PUBLIC_ZAQ_WIDGET_ID`), le script bundlé `src/scripts/zaq-widget.ts` et les styles (globaux) du conteneur.
+- `src/pages/index.astro` : la page rend uniquement `<ZaqWidget />` (`src/components/ZaqWidget.astro`), qui contient le conteneur `<div id="iframe-zaq">`, le script `embed.js` (URL construite depuis `PUBLIC_ZAQ_URL`, **ngrok temporaire** ; `data-widget-id` depuis `PUBLIC_ZAQ_WIDGET_ID`), le script bundlé `src/scripts/zaq-widget.ts` et les styles (globaux) du conteneur.
 - Fait : adapter `@astrojs/vercel` (site toujours `static`), `src/pages/api/widget-identity.ts` (`prerender = false`), `src/lib/zaq-identity.ts` (signature HS256, testée), `src/lib/zaq-ids.ts` + `src/lib/conversation-cookie.ts`, schéma `astro:env` dans `astro.config.mjs`, CSP `vercel.json` (origine Zaq).
-- Ancien code iframe (`ChatFrame.astro`, `chat-frame.ts`, `municipality.ts`, `user-id.ts`, `chat-url.ts` + tests) **conservé volontairement pour l'instant** (pas de nettoyage décidé) Ses variables d'environnement (`PUBLIC_CHAT_URL`, `PUBLIC_CHAT_MUNICIPALITY_PARAM`, `PUBLIC_DEFAULT_MUNICIPALITY_CODE`, `PUBLIC_CHAT_USER_ID_PARAM`) ont été **retirées** de `.env` et `.env.example` : à les remettre si `<ChatFrame />` est réactivé.
+- **Ancien code iframe supprimé** (`ChatFrame.astro`, `chat-frame.ts`, `chat-url.ts`, `municipality.ts`, `user-id.ts` + tests) ainsi que ses variables d'environnement (`PUBLIC_CHAT_URL`, `PUBLIC_CHAT_MUNICIPALITY_PARAM`, `PUBLIC_DEFAULT_MUNICIPALITY_CODE`, `PUBLIC_CHAT_USER_ID_PARAM`). Il reste récupérable dans l'historique Git.
 
 ### Décisions prises (widget Zaq)
 
@@ -120,11 +120,13 @@ src/
   components/
     AnnouncementBar.astro
     Header.astro
-    ChatFrame.astro
+    ZaqWidget.astro            conteneur + script embed.js du widget Zaq + accueil
     Footer.astro
-  scripts/chat-frame.ts        résolution de l'URL de l'iframe (voir plus bas)
-  lib/municipality.ts          validation du code commune
-  lib/user-id.ts               génération + cookie du userID
+  scripts/zaq-widget.ts        jeton d'identité, init() du widget, cookie conversationId
+  lib/zaq-identity.ts          signature du jeton HS256 (serveur)
+  lib/zaq-ids.ts               noms de cookies + validation des identifiants (partagé)
+  lib/conversation-cookie.ts   écriture du cookie conversationId (navigateur)
+  pages/api/widget-identity.ts endpoint à la demande (seule route non statique)
   styles/
     tokens.css                 tokens Tandem adaptés (voir plus bas)
     fonts.css                  @font-face Manrope (fichiers locaux)
@@ -210,7 +212,7 @@ Version de départ (d'après le footer Tandem), **texte seul, sans logo** (un lo
 - Mobile-first : les deux blocs **empilés** par défaut, côte à côte dès ~640 px. Footer le plus compact possible sur mobile.
 - Année du copyright : calculée au build.
 
-## Iframe et code commune
+## Iframe et code commune (OBSOLÈTE : code supprimé, remplacé par le widget Zaq, voir section en tête)
 
 ### Principe
 
@@ -289,7 +291,7 @@ Résultat attendu en V1 : l'iframe pointe sur `https://app.chatvote.org/chat?mun
 ## Conventions de code
 
 - Biome pour lint + format. `astro check` en CI pour les types.
-- Composants Astro sans JS client, sauf le script `chat-frame.ts`.
+- Composants Astro sans JS client, sauf le script `zaq-widget.ts`.
 - Pas de dépendance ajoutée sans raison (le site doit rester minuscule).
 - Commits courts et atomiques.
 
@@ -298,7 +300,7 @@ Résultat attendu en V1 : l'iframe pointe sur `https://app.chatvote.org/chat?mun
 1. Scaffolding : `pnpm create astro@latest` (Astro 7.x), TS strict, Biome, `.nvmrc`, `.env.example`, repo Git.
 2. Tokens CSS, polices locales, layout de base, logo SVG local.
 3. Bandeau, header (placeholder + logo), footer.
-4. `ChatFrame` + `chat-frame.ts` + `lib/municipality.ts` + `lib/user-id.ts` (avec tests unitaires de la validation du code commune et de la gestion du cookie `userID`).
+4. Widget Zaq : `ZaqWidget` + `zaq-widget.ts` + `/api/widget-identity` (avec tests unitaires du jeton et des cookies).
 5. `vercel.json` (CSP, headers), déploiement Vercel avec previews par branche.
 6. Recette (ci-dessous).
 
