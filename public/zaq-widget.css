@@ -25,7 +25,7 @@
   --zaq-widget-text: #f5f5f5; /* v2 --foreground */
   --zaq-widget-muted: #a1a1aa; /* v2 --muted-foreground */
   --zaq-widget-composer-background: #130436; /* v2 --card (et --sidebar) */
-  --zaq-widget-elevated: #2e275a; /* v2 --secondary (bulles utilisateur, code, titres de tableau) */
+  --zaq-widget-elevated: #130436; /* v2 --secondary (bulles utilisateur, code, titres de tableau) */
   --zaq-widget-accent-background: #2e275a; /* v2 --accent */
   --zaq-widget-border: #2e275a; /* v2 --border */
   --zaq-widget-shadow: #00000040;
@@ -34,5 +34,5 @@
 
   /* Police et rayon : inchangés pour l'instant (v2 : Geist, --radius .625rem). */
   --zaq-widget-font-family: "Manrope", system-ui, sans-serif;
-  --zaq-widget-radius: 24px;
+  --zaq-widget-radius: 18px;
 }
