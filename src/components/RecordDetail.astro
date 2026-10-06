@@ -19,7 +19,10 @@ const longDate = date.toLocaleDateString("fr-FR", {
 });
 const count = items.length || entry.data.deliberations;
 
-const voteLabel: Record<string, string> = { presentee: "Présentée" };
+const voteLabel: Record<string, string> = {
+  presentee: "Présentée",
+  adoptee: "Adoptée",
+};
 
 const { Content } = await render(entry);
 const hasBody = Boolean(entry.body?.trim());
