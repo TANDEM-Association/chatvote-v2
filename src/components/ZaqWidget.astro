@@ -8,8 +8,25 @@ const zaqEmbedUrl = new URL(
 );
 ---
 
-<!-- Conteneur du widget : embed.js y crée l'iframe #zaq-widget -->
-<div id="iframe-zaq"></div>
+<div class="stage" data-zaq-stage>
+  <!-- Accueil affiché derrière l'iframe (transparente) tant qu'aucune conversation n'a commencé -->
+  <div class="welcome">
+    <img
+      class="welcome-logo"
+      src="/logo-chatvote.svg"
+      alt="ChatVote"
+      width="500"
+      height="500"
+    />
+    <p class="welcome-text">
+      ChatVote transforme les procès-verbaux municipaux en réponses simples,
+      neutres et sourcées. Posez vos questions sur votre ville et comprenez
+      enfin ce que votre mairie décide.
+    </p>
+  </div>
+  <!-- Conteneur du widget : embed.js y crée l'iframe #zaq-widget -->
+  <div id="iframe-zaq"></div>
+</div>
 
 <script
   is:inline
@@ -22,10 +39,63 @@ const zaqEmbedUrl = new URL(
   import "../scripts/zaq-widget";
 </script>
 
+<style>
+  .stage {
+    position: relative;
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .welcome {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    /* Réserve le bas pour la zone de saisie du widget. */
+    padding: var(--gutter) var(--gutter) 9rem;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .welcome-logo {
+    width: clamp(6rem, 30dvh, 15rem);
+    height: auto;
+  }
+
+  .welcome-text {
+    max-width: 34rem;
+    color: var(--ink-secondary);
+    font-size: var(--body-md-size);
+    line-height: var(--body-md-line);
+    text-wrap: balance;
+  }
+
+  .stage[data-started] .welcome {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .welcome {
+      gap: var(--space-6);
+    }
+
+    .welcome-text {
+      font-size: var(--body-lg-size);
+      line-height: var(--body-lg-line);
+    }
+  }
+</style>
+
 <!-- Global : l'iframe est créée à l'exécution par embed.js, les styles scopés ne la ciblent pas -->
 <style is:global>
   /* L'iframe #zaq-widget remplit l'espace entre header et footer. */
   #iframe-zaq {
+    position: relative; /* au-dessus de l'accueil (.welcome) */
     flex: 1;
     display: flex;
     min-width: 0;
