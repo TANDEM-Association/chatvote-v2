@@ -1,0 +1,40 @@
+---
+import { PUBLIC_ZAQ_WIDGET_ID } from "astro:env/server";
+
+// URL Zaq : PUBLIC_ZAQ_URL (ngrok temporaire), voir ZAQ-WIDGET-INTEGRATION.en.md
+const zaqEmbedUrl = new URL(
+  "/web_widget/assets/embed.js",
+  import.meta.env.PUBLIC_ZAQ_URL,
+);
+---
+
+<!-- Conteneur du widget : embed.js y crée l'iframe #zaq-widget -->
+<div id="iframe-zaq"></div>
+
+<script
+  is:inline
+  src={zaqEmbedUrl.toString()}
+  data-widget-id={PUBLIC_ZAQ_WIDGET_ID}
+  iframe-location-id="#iframe-zaq"
+  defer></script>
+
+<script>
+  import "../scripts/zaq-widget";
+</script>
+
+<!-- Global : l'iframe est créée à l'exécution par embed.js, les styles scopés ne la ciblent pas -->
+<style is:global>
+  /* L'iframe #zaq-widget remplit l'espace entre header et footer. */
+  #iframe-zaq {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  #zaq-widget {
+    flex: 1;
+    width: 100%;
+    border: 0;
+  }
+</style>
