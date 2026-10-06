@@ -72,6 +72,14 @@ Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/w
 - Le `userID` est un identifiant **pseudonyme, pas une authentification**.
 - Ne jamais logguer ni afficher le `userID` ni le jeton.
 
+### Développement local avec le widget (ngrok)
+
+Le widget tourne sur une adresse publique (ngrok) et son iframe charge `/zaq-widget.css` et `/fonts/*` depuis `localhost:4321`. Deux protections bloquent cela en local, **sans effet sur Vercel** :
+
+- **Chrome (Local Network Access)** : une page publique ne peut pas appeler `localhost`. Mettre `chrome://flags/#local-network-access-check` sur *Disabled* (profil de dev uniquement, à remettre sur Default ensuite) ou autoriser « Accès au réseau local » pour le site ngrok.
+- **Serveur de dev Astro 7** : il répond 403 « Cross-origin request blocked » aux sous-ressources cross-site sans en-tête `Origin`. Le plugin `dev-allow-zaq-assets` d'`astro.config.mjs` retire `Sec-Fetch-Site` pour ces seuls chemins (`/zaq-widget.css`, `/fonts/*`), en dev uniquement. Les CORS du serveur de dev sont ouverts (`server.headers`, `vite.server.cors`) pour la même raison.
+- Sans cela, modifier les variables `--zaq-widget-*` directement dans DevTools (contexte de l'iframe) puis recopier les valeurs dans `public/zaq-widget.css`.
+
 ### Secrets et variables d'environnement
 
 Variables **serveur** (jamais de préfixe `PUBLIC_`, jamais dans le code ni dans Git) : `ZAQ_SIGNING_KEY` (fournie par Zaq), `ZAQ_ISSUER`, `ZAQ_AUDIENCE`. Elles vont dans `.env` (gitignoré) en local et dans les variables d'environnement Vercel. `ZAQ_ISSUER` / `ZAQ_AUDIENCE` valent pour l'instant les **valeurs d'exemple du guide Zaq** (`test-widget` / `zaq-web-widget`) : à confirmer.

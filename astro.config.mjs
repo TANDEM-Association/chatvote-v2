@@ -30,6 +30,26 @@ export default defineConfig({
     inlineStylesheets: "never",
   },
   vite: {
+    plugins: [
+      {
+        // Dev uniquement. Le serveur de dev d'Astro 7 répond 403 aux sous-ressources
+        // « cross-site » sans en-tête Origin. Or la feuille du widget et les polices
+        // sont chargées par l'iframe Zaq (autre site) : on retire Sec-Fetch-Site pour
+        // ces seuls chemins publics, avant les middlewares d'Astro.
+        name: "dev-allow-zaq-assets",
+        apply: "serve",
+        configureServer(server) {
+          server.httpServer?.prependListener("request", (req) => {
+            if (
+              req.url === "/zaq-widget.css" ||
+              req.url?.startsWith("/fonts/")
+            ) {
+              delete req.headers["sec-fetch-site"];
+            }
+          });
+        },
+      },
+    ],
     // Dev uniquement : Vite ne répond au CORS (dont le preflight OPTIONS) que pour
     // les origines localhost. L'iframe Zaq (ngrok) en est une autre.
     server: { cors: true },
