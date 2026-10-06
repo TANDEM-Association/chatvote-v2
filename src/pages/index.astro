@@ -1,6 +1,9 @@
 ---
 // import ChatFrame from "../components/ChatFrame.astro";
+import { PUBLIC_ZAQ_WIDGET_ID } from "astro:env/server";
 import BaseLayout from "../layouts/BaseLayout.astro";
+
+const zaqEmbedUrl = new URL("/web_widget/assets/embed.js", import.meta.env.PUBLIC_ZAQ_URL);
 ---
 
 <BaseLayout
@@ -12,11 +15,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   <!-- Container for zaq widget -->
    <div id="iframe-zaq"></div>
 
-  <!-- TODO: test ZAQ (URL ngrok temporaire), voir ZAQ-WIDGET-INTEGRATION.en.md -->
+  <!-- URL Zaq : PUBLIC_ZAQ_URL (ngrok temporaire), voir ZAQ-WIDGET-INTEGRATION.en.md -->
   <script
-  src="https://3f64-185-83-86-177.ngrok-free.app/web_widget/assets/embed.js"
-  data-widget-id="13"
-  iframe-location-id="#iframe-zaq"
-  defer
-></script>
+    is:inline
+    src={zaqEmbedUrl.toString()}
+    data-widget-id={PUBLIC_ZAQ_WIDGET_ID}
+    iframe-location-id="#iframe-zaq"
+    defer
+  ></script>
+  <script>
+    import "../scripts/zaq-widget";
+  </script>
 </BaseLayout>
