@@ -19,6 +19,12 @@ export default defineConfig({
       }),
     },
   },
+  server: {
+    // astro dev ignore vercel.json : la feuille du widget et les polices sont
+    // chargées depuis l'iframe Zaq (autre origine), donc CORS aussi en local.
+    // Feuille et polices sont publiques, sans cookies : * suffit en dev.
+    headers: { "Access-Control-Allow-Origin": "*" },
+  },
   build: {
     // Pas de <style> inline : permet une CSP sans 'unsafe-inline'.
     inlineStylesheets: "never",

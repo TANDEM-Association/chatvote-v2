@@ -125,7 +125,7 @@ frame-ancestors 'none'
 
 - `<ORIGINE_ZAQ>` = origine exacte de `PUBLIC_ZAQ_URL`, jamais `*`. Elle est **écrite en dur** dans `vercel.json` : à mettre à jour quand l'URL Zaq change (`vercel-config.test.ts` vérifie la cohérence avec `.env.example`).
 - Pas de `'unsafe-inline'` : `build.inlineStylesheets: 'never'` et `vite.build.assetsInlineLimit: 0` dans `astro.config.mjs`, scripts bundlés en fichiers.
-- `/fonts/*` envoie `Access-Control-Allow-Origin: <ORIGINE_ZAQ>` : la police Manrope est chargée depuis l'iframe du widget (cross-origin, CORS requis). `/zaq-widget.css` a un cache court (1 h).
+- `/fonts/*` envoie `Access-Control-Allow-Origin: <ORIGINE_ZAQ>` : la police Manrope est chargée depuis l'iframe du widget (cross-origin, CORS requis). `/zaq-widget.css` a le même en-tête CORS et un cache court (1 h). En local, `astro dev` ignore `vercel.json` : `server.headers` dans `astro.config.mjs` envoie `Access-Control-Allow-Origin: *` (feuille et polices publiques).
 - `Permissions-Policy` restrictive (avec `clipboard-write` pour l'origine Zaq), `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options: DENY`.
 - `img-src`, `style-src` et `font-src` devront peut-être inclure l'hôte Zaq : le guide ne les liste pas, à valider en recette.
 
