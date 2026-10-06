@@ -1,4 +1,7 @@
-import { storeConversationId } from "../lib/conversation-cookie";
+import {
+  hasConversationCookie,
+  storeConversationId,
+} from "../lib/conversation-cookie";
 
 interface ZaqWidget {
   init(options: { identity_token: string }): Promise<unknown>;
@@ -34,6 +37,11 @@ async function fetchIdentityToken(): Promise<string> {
   return identity_token;
 }
 
+/** Masque l'accueil (logo + texte) dès qu'une conversation existe. */
+const stage = document.querySelector<HTMLElement>("[data-zaq-stage]");
+const markConversationStarted = () => stage?.setAttribute("data-started", "");
+if (hasConversationCookie(document.cookie)) markConversationStarted();
+
 let pending: Promise<void> | null = null;
 
 /** Récupère un jeton puis (ré)initialise le widget. Un seul appel à la fois. */
@@ -62,6 +70,7 @@ async function setup(widget: ZaqWidget) {
     (event) => {
       const detail = (event as CustomEvent<{ conversation_id?: unknown }>)
         .detail;
+      markConversationStarted();
       storeConversationId(document, detail?.conversation_id, COOKIE_MAX_AGE);
     },
     true,

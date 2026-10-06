@@ -22,3 +22,14 @@ export function storeConversationId(
     return false;
   }
 }
+
+/** Vrai si une conversation est déjà enregistrée dans une chaîne `document.cookie`. */
+export function hasConversationCookie(cookieString: string): boolean {
+  return cookieString.split(";").some((part) => {
+    const [name, ...rest] = part.trim().split("=");
+    return (
+      name === CONVERSATION_ID_COOKIE_NAME &&
+      isValidConversationId(rest.join("="))
+    );
+  });
+}
