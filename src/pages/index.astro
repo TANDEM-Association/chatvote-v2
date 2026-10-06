@@ -1,9 +1,7 @@
 ---
 // import ChatFrame from "../components/ChatFrame.astro";
-import { PUBLIC_ZAQ_WIDGET_ID } from "astro:env/server";
+import ZaqWidget from "../components/ZaqWidget.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-
-const zaqEmbedUrl = new URL("/web_widget/assets/embed.js", import.meta.env.PUBLIC_ZAQ_URL);
 ---
 
 <BaseLayout
@@ -11,19 +9,5 @@ const zaqEmbedUrl = new URL("/web_widget/assets/embed.js", import.meta.env.PUBLI
   description="ChatVote est une initiative associative open source et souveraine pour s'informer sur les programmes des élections municipales."
 >
   <!-- <ChatFrame /> -->
-
-  <!-- Container for zaq widget -->
-   <div id="iframe-zaq"></div>
-
-  <!-- URL Zaq : PUBLIC_ZAQ_URL (ngrok temporaire), voir ZAQ-WIDGET-INTEGRATION.en.md -->
-  <script
-    is:inline
-    src={zaqEmbedUrl.toString()}
-    data-widget-id={PUBLIC_ZAQ_WIDGET_ID}
-    iframe-location-id="#iframe-zaq"
-    defer
-  ></script>
-  <script>
-    import "../scripts/zaq-widget";
-  </script>
+  <ZaqWidget />
 </BaseLayout>
