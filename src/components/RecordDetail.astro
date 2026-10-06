@@ -1,0 +1,338 @@
+---
+// Vue détail d'un compte rendu, rendue au build et masquée jusqu'au clic dans
+// la liste (voir records-modal.ts). Styles hérités des variables --modal-*.
+import { type CollectionEntry, render } from "astro:content";
+
+interface Props {
+  entry: CollectionEntry<"records">;
+}
+
+const { entry } = Astro.props;
+const { type, date, sourceUrl, topics, items } = entry.data;
+
+const iso = date.toISOString().slice(0, 10);
+const longDate = date.toLocaleDateString("fr-FR", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const count = items.length || entry.data.deliberations;
+
+const voteLabel: Record<string, string> = { presentee: "Présentée" };
+
+const { Content } = await render(entry);
+const hasBody = Boolean(entry.body?.trim());
+---
+
+<article class="detail" data-record-detail={entry.id} hidden>
+  <header class="head">
+    <button type="button" class="back" data-record-back aria-label="Retour à la liste">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m12 19-7-7 7-7M19 12H5" />
+      </svg>
+    </button>
+    <div class="head-text">
+      <h3 class="title">{type} du {iso}</h3>
+      <p class="meta">
+        <span>{longDate}</span>
+        <span class="sep" aria-hidden="true">·</span>
+        <span>{count} délibération{count > 1 ? "s" : ""}</span>
+        {
+          sourceUrl && (
+            <>
+              <span class="sep" aria-hidden="true">·</span>
+              <a class="source" href={sourceUrl} target="_blank" rel="noopener noreferrer">
+                Document original
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                </svg>
+              </a>
+            </>
+          )
+        }
+      </p>
+    </div>
+  </header>
+
+  {
+    topics.length > 0 && (
+      <div class="topics">
+        <span class="topics-label">Sujets dans le temps :</span>
+        <ul class="chips">
+          {topics.map((topic) => (
+            <li class="chip">{topic}</li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  {
+    hasBody && (
+      <section class="md">
+        <Content />
+      </section>
+    )
+  }
+
+  {
+    items.length > 0 && (
+      <ol class="cards">
+        {items.map((item, index) => (
+          <li>
+            <details class="card" open>
+              <summary class="card-head">
+                <span class="num">#{index + 1}</span>
+                <span class="card-main">
+                  <span class="card-title">{item.title}</span>
+                  <span class="badges">
+                    <span class="badge">{voteLabel[item.vote] ?? item.vote}</span>
+                    {item.amount && <span class="amount">{item.amount}</span>}
+                  </span>
+                </span>
+                <svg class="toggle" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <p class="card-body">{item.summary}</p>
+            </details>
+          </li>
+        ))}
+      </ol>
+    )
+  }
+</article>
+
+<style>
+  .detail {
+    --detail-muted: color-mix(in srgb, var(--modal-ink) 4%, var(--modal-bg));
+    --detail-card: #fff;
+  }
+
+  .head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--gutter);
+    border-bottom: 1px solid var(--modal-border);
+  }
+
+  .back {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-full);
+    color: var(--modal-ink-secondary);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--modal-ink);
+    }
+  }
+
+  .head-text {
+    min-width: 0;
+  }
+
+  .title {
+    font-size: var(--body-md-size);
+    font-weight: 600;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--modal-ink-secondary);
+    font-size: var(--body-sm-size);
+  }
+
+  .sep {
+    opacity: 0.5;
+  }
+
+  .source {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--brand-indigo);
+  }
+
+  .topics {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--gutter);
+    background: var(--detail-muted);
+    border-bottom: 1px solid var(--modal-border);
+    font-size: var(--body-sm-size);
+  }
+
+  .topics-label {
+    color: var(--modal-ink-secondary);
+  }
+
+  .chips {
+    display: contents;
+    list-style: none;
+  }
+
+  .chip {
+    padding: 2px var(--space-3);
+    border: 1px solid color-mix(in srgb, var(--brand-indigo) 40%, transparent);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--brand-indigo) 5%, transparent);
+    color: var(--brand-indigo);
+  }
+
+  .md {
+    padding: var(--space-4) var(--gutter);
+    background: var(--detail-muted);
+    border-bottom: 1px solid var(--modal-border);
+    overflow-wrap: anywhere;
+
+    & > :global(:first-child) {
+      margin-top: 0;
+    }
+
+    & :global(h1) {
+      margin: 0 0 var(--space-2);
+      font-size: 1.5rem;
+      line-height: 1.25;
+    }
+
+    & :global(h2) {
+      margin: var(--space-6) 0 var(--space-2);
+      font-size: 1.25rem;
+    }
+
+    & :global(h3) {
+      margin: var(--space-6) 0 var(--space-2);
+      font-size: 1.0625rem;
+    }
+
+    & :global(p),
+    & :global(ul) {
+      margin: 0 0 var(--space-4);
+    }
+
+    & :global(ul) {
+      padding-inline-start: var(--space-6);
+    }
+
+    & :global(a) {
+      color: var(--brand-indigo);
+      text-decoration: underline;
+    }
+
+    & :global(blockquote) {
+      margin: var(--space-4) 0;
+      padding-inline-start: var(--space-4);
+      border-inline-start: 4px solid var(--modal-border);
+      color: var(--modal-ink-secondary);
+      font-style: italic;
+    }
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: var(--space-4) var(--gutter);
+    list-style: none;
+  }
+
+  .card {
+    box-shadow: 0 0 0 1px var(--modal-border);
+  }
+
+  .card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--detail-card);
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  .num {
+    flex: none;
+    margin-top: 2px;
+    color: var(--modal-ink-secondary);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .card-main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .card-title {
+    font-size: var(--body-sm-size);
+    font-weight: 500;
+  }
+
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .badge {
+    padding: 0 var(--space-2);
+    border: 1px solid var(--modal-border);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+  }
+
+  .amount {
+    color: var(--modal-ink-secondary);
+    font-size: 0.6875rem;
+  }
+
+  .toggle {
+    flex: none;
+    margin-top: 2px;
+    color: var(--modal-ink-secondary);
+    transition: transform 0.15s ease;
+
+    .card[open] & {
+      transform: rotate(180deg);
+    }
+  }
+
+  .card-body {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--modal-border);
+    background: var(--detail-muted);
+    color: var(--modal-ink-secondary);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .toggle {
+      transition: none;
+    }
+  }
+</style>
