@@ -26,7 +26,7 @@ Docs de référence : `ZAQ-WIDGET-INTEGRATION.en.md` (notre analyse), [guide d'i
 
 - `src/pages/index.astro` : `<ChatFrame />` reste **commenté (à laisser tel quel)** ; la page rend `<ZaqWidget />` (`src/components/ZaqWidget.astro`), qui contient le conteneur `<div id="iframe-zaq">`, le script `embed.js` (URL construite depuis `PUBLIC_ZAQ_URL`, **ngrok temporaire** ; `data-widget-id` depuis `PUBLIC_ZAQ_WIDGET_ID`), le script bundlé `src/scripts/zaq-widget.ts` et les styles (globaux) du conteneur.
 - Fait : adapter `@astrojs/vercel` (site toujours `static`), `src/pages/api/widget-identity.ts` (`prerender = false`), `src/lib/zaq-identity.ts` (signature HS256, testée), `src/lib/zaq-ids.ts` + `src/lib/conversation-cookie.ts`, schéma `astro:env` dans `astro.config.mjs`, CSP `vercel.json` (origine Zaq).
-- Ancien code iframe (`ChatFrame.astro`, `chat-frame.ts`, `municipality.ts`, `user-id.ts`, `chat-url.ts` + tests) **conservé volontairement pour l'instant** (pas de nettoyage décidé).
+- Ancien code iframe (`ChatFrame.astro`, `chat-frame.ts`, `municipality.ts`, `user-id.ts`, `chat-url.ts` + tests) **conservé volontairement pour l'instant** (pas de nettoyage décidé) Ses variables d'environnement (`PUBLIC_CHAT_URL`, `PUBLIC_CHAT_MUNICIPALITY_PARAM`, `PUBLIC_DEFAULT_MUNICIPALITY_CODE`, `PUBLIC_CHAT_USER_ID_PARAM`) ont été **retirées** de `.env` et `.env.example` : à les remettre si `<ChatFrame />` est réactivé.
 
 ### Décisions prises (widget Zaq)
 
