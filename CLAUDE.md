@@ -24,8 +24,19 @@ Docs de référence : `ZAQ-WIDGET-INTEGRATION.en.md` (notre analyse), [guide d'i
 
 ### État actuel
 
-- `src/pages/index.astro` : `<ChatFrame />` est **commenté (à laisser tel quel)**. Il contient un conteneur `<div id="iframe-zaq">` et le script `embed.js` (URL **ngrok temporaire**, `data-widget-id="13"`, `iframe-location-id="#iframe-zaq"`).
-- Sans `init()` avec un jeton, le widget ne fonctionne pas : c'est ce qui reste à construire.
+- `src/pages/index.astro` : `<ChatFrame />` reste **commenté (à laisser tel quel)**. Conteneur `<div id="iframe-zaq">` + script `embed.js` (URL construite depuis `PUBLIC_ZAQ_URL`, **ngrok temporaire** ; `data-widget-id` depuis `PUBLIC_ZAQ_WIDGET_ID`) + script bundlé `src/scripts/zaq-widget.ts`.
+- Fait : adapter `@astrojs/vercel` (site toujours `static`), `src/pages/api/widget-identity.ts` (`prerender = false`), `src/lib/zaq-identity.ts` (signature HS256, testée), `src/lib/zaq-ids.ts` + `src/lib/conversation-cookie.ts`, schéma `astro:env` dans `astro.config.mjs`, CSP `vercel.json` (origine Zaq), styles du conteneur dans `base.css`.
+- Ancien code iframe (`ChatFrame.astro`, `chat-frame.ts`, `municipality.ts`, `user-id.ts`, `chat-url.ts` + tests) **conservé volontairement pour l'instant** (pas de nettoyage décidé).
+
+### Décisions prises (widget Zaq)
+
+- **Adapter** : `@astrojs/vercel`. Une seule route à la demande : `/api/widget-identity`.
+- **`user_id`** : UUID v4 généré par l'endpoint, stocké dans le cookie **`userID`** posé par le **serveur** (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, durée `PUBLIC_USER_ID_COOKIE_MAX_AGE`), réutilisé aux visites suivantes pour que Zaq reconnaisse le visiteur et affiche l'historique. Valeur invalide ou absente : nouvel UUID.
+- **`conversation_id`** : cookie **`conversationId`** posé par le navigateur à l'événement `zaq:conversation` (`event.detail.conversation_id`, émis sur l'iframe `#zaq-widget`, écouté en capture sur `document`), relu par l'endpoint pour reprendre la conversation.
+- **`prompt_context`** : `Saint-Saturnin 63450` (constante `PROMPT_CONTEXT`, Zaq ne sait pas gérer un code commune pour l'instant). Le paramètre d'URL `municipalityCode` n'est plus utilisé.
+- **Protection de l'endpoint** : POST same-origin uniquement (en-tête `Origin` vérifié), réponse `Cache-Control: no-store`. Pas de limitation de débit pour l'instant.
+- **Secrets** (variables serveur, jamais `PUBLIC_`) : `ZAQ_SIGNING_KEY` (dans `.env` local, gitignoré, et dans les variables Vercel), `ZAQ_ISSUER`, `ZAQ_AUDIENCE` (valeurs d'exemple du guide Zaq, **à confirmer**, requis dans le jeton). Durée du jeton : 240 s.
+- **Cookies** : le site pose désormais **deux** cookies first-party (`userID`, `conversationId`) : la règle « un seul cookie » ci-dessous est périmée.
 
 ### Fonctionnement du widget Zaq
 
@@ -38,29 +49,17 @@ Docs de référence : `ZAQ-WIDGET-INTEGRATION.en.md` (notre analyse), [guide d'i
 - Pas de paramètre « code commune » dédié : à passer via `prompt_context`.
 - Les **origines autorisées** (localhost:4321, previews Vercel, domaine final) se configurent dans le back-office Zaq (`/bo/channels/retrieval/web_widget`).
 
-### Changements à prévoir
+### Reste à faire / points ouverts
 
-1. **Astro : rendu à la demande pour une seule route.** Ajouter un adapter (`@astrojs/vercel`, ou Node si l'on veut rester portable) et créer `src/pages/api/widget-identity.ts` avec `export const prerender = false`. Le reste du site **reste statique** (mode `static` par défaut).
-2. **Script front** (bundlé, pas d'inline) : récupère le jeton, appelle `init`, gère `zaq:authentication-required`, applique `updateSettings` (sombre, `fr`).
-3. **Intégration du script Zaq** depuis le layout/la page, avec l'URL Zaq en variable d'environnement (ex. `PUBLIC_ZAQ_URL`) au lieu de l'URL ngrok codée en dur.
-4. **Layout** : le conteneur du widget doit remplir l'espace entre header et footer (voir « Layout »). Vérifier si `embed.js` permet de contrôler la taille, sinon styler `#zaq-widget`.
-5. **CSP (`vercel.json`)** : ajouter l'hôte Zaq à `script-src`, `frame-src`, `connect-src` (+ `wss:`), probablement `img-src`, `style-src`, `font-src` (à valider en recette, le guide ne les liste pas).
-6. **Variables d'environnement** (`.env.example`) : ajouter l'URL Zaq, `widget_id`, et côté serveur (privées) clé de signature, `iss`, `aud`. Retirer ce qui ne sert plus (`PUBLIC_CHAT_URL`, `PUBLIC_CHAT_MUNICIPALITY_PARAM`, `PUBLIC_CHAT_USER_ID_PARAM`) selon les décisions.
-7. **Nettoyage** (après validation de Zaq) : `ChatFrame.astro`, `chat-frame.ts`, `lib/municipality.ts`, `lib/user-id.ts` et leurs tests deviennent probablement obsolètes (ou à réutiliser pour valider le code commune / fournir le `user_id`).
-8. **Réécriture de ce document** : décisions actées (statique sans adapter, « aucun script tiers », « un seul cookie »), confidentialité, structure, recette.
-
-### Points ouverts (à trancher, bloquants pour le plan détaillé)
-
-- **`user_id`** : cookie aléatoire du site (lu par l'endpoint) ou visiteur anonyme accepté par Zaq ? Un mode sans JWT existe-t-il ?
-- **Protection de l'endpoint** : le guide le dit « authentifié », mais le site n'a pas de login. Ouvert à tous ? Limitation de débit / contrôle d'origine ?
-- **Code commune** : transmis via `prompt_context` (quel texte exact ?), validé côté serveur avec `/^(\d{5}|2[AB]\d{3})$/` ; paramètre d'URL `municipalityCode` conservé ?
-- **`conversation_id`** : toujours une nouvelle conversation, ou reprise (où stocker l'ID) ?
-- **Secrets** : qui détient la clé, `iss`, `aud`, `widget_id` ; stockage dans les variables d'environnement Vercel.
-- **Hébergement / adapter** : Vercel (`@astrojs/vercel`) ou Node (portabilité vers un hébergeur français) ?
-- **URL Zaq stable** (prod et preview) : l'URL ngrok est temporaire et peut afficher une page d'avertissement.
-- **Stockage** : Zaq mentionne `sessionStorage` (`zaq-conversation-{id}`). Dans l'origine du widget (iframe, acceptable) ou dans notre page (interdit par nos règles) ?
-- **Confidentialité / RGPD** : un script tiers s'exécute dans notre page avec accès au DOM ; confiance à valider, ainsi que cookies, mentions légales et politique de confidentialité (avec la personne en charge du juridique).
-- **Taille / position de l'iframe** pilotables ?
+- **À vérifier en test** (voir le widget fonctionner) : taille et position de l'iframe dans `#iframe-zaq` (`embed.js` peut imposer sa propre mise en page), requêtes bloquées par la CSP (`img-src`, `style-src`, `font-src` à élargir si besoin), page d'avertissement ngrok, `iss`/`aud` acceptés par Zaq, forme exacte de l'événement `zaq:conversation`.
+- Ajouter `http://localhost:4321`, les previews Vercel et le domaine final aux origines autorisées du back-office Zaq.
+- Renseigner les variables d'environnement `ZAQ_*` et `PUBLIC_ZAQ_*` dans Vercel.
+- **CSP** : l'origine Zaq est écrite en dur dans `vercel.json` (doit rester identique à `PUBLIC_ZAQ_URL`, vérifié par `vercel-config.test.ts` sur `.env.example`). À mettre à jour quand l'URL Zaq change.
+- **URL Zaq stable** (prod et preview) : l'URL ngrok est temporaire.
+- **Stockage** : l'exemple du guide Zaq utilise `sessionStorage` côté intégrateur ; nous utilisons un cookie. À vérifier si le widget lui-même écrit dans notre origine.
+- **Confidentialité / RGPD** : script tiers dans notre page, deux cookies dont un identifiant stable lié à un historique de conversation : à valider avec la personne en charge du juridique (consentement, mentions légales, politique de confidentialité, durée de vie).
+- **Limitation de débit** de `/api/widget-identity` si nécessaire.
+- **Nettoyage** de l'ancien code iframe et **réécriture complète** de ce document (décisions actées, confidentialité, structure, recette) une fois Zaq validé.
 
 ## Décisions actées (ne pas remettre en cause sans validation)
 
