@@ -102,6 +102,7 @@ ZAQ_AUDIENCE=zaq-web-widget
 
 - Pas d'analytics, pas de Google Fonts, pas de CDN. **Exception actée : le script du widget Zaq** (script tiers qui s'exécute dans notre page avec accès à son DOM et à ses cookies non-HttpOnly). La confiance accordée à Zaq est à valider (voir « À trancher »).
 - **Deux cookies first-party** : `userID` (HttpOnly, posé par le serveur) et `conversationId` (posé par le navigateur). Aucun autre cookie, et **aucun `localStorage`/`sessionStorage` dans notre page** (le widget pourrait en utiliser dans sa propre origine : à vérifier).
+- **Le widget pose aussi son propre cookie** `_zaq_key` (origine Zaq, `Secure`, `HttpOnly`, `SameSite=None`), donc un cookie tiers dans notre iframe : à faire expliquer par Zaq et à intégrer à l'analyse RGPD (constaté à la lecture de la réponse de `/widget/13`).
 - Le `userID` est un UUID aléatoire : il ne contient **aucune donnée personnelle** et n'est jamais dérivé d'informations sur l'utilisateur (IP, user-agent, etc.). Lié à un historique de conversation, il reste une donnée **pseudonyme** au sens du RGPD.
 - Polices, logos et favicon sont **servis localement** (aucun hotlink).
 - Zaq reçoit l'adresse IP des visiteurs (inévitable avec un widget tiers).
