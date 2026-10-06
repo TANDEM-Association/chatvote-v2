@@ -1,2 +1,5 @@
 allowBuilds:
   esbuild: false
+overrides:
+  # @vercel/routing-utils épingle path-to-regexp@6.1.0 (ReDoS, GHSA-9wv6-86v2-598j) : forcer le correctif 6.x.
+  path-to-regexp@6.1.0: 6.3.0
