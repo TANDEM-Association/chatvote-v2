@@ -8,11 +8,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   description="ChatVote est une initiative associative open source et souveraine pour s'informer sur les programmes des élections municipales."
 >
   <!-- <ChatFrame /> -->
+
+  <!-- Container for zaq widget -->
    <div id="iframe-zaq"></div>
+
   <!-- TODO: test ZAQ (URL ngrok temporaire), voir ZAQ-WIDGET-INTEGRATION.en.md -->
   <script
-    is:inline
-    src="https://3f64-185-83-86-177.ngrok-free.app/web_widget/assets/embed.js"
-    data-widget-id="13"
-    defer></script>
+  src="https://3f64-185-83-86-177.ngrok-free.app/web_widget/assets/embed.js"
+  data-widget-id="13"
+  iframe-location-id="#iframe-zaq"
+  defer
+></script>
 </BaseLayout>
