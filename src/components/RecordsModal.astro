@@ -1,7 +1,14 @@
 ---
 // Modale qui recouvre le chat (mais ni le header ni le footer).
-// Vue liste en place ; la vue détail viendra ensuite.
+// Vue liste + une vue détail par compte rendu prêt, toutes rendues au build ;
+// records-modal.ts bascule de l'une à l'autre.
+import { getCollection } from "astro:content";
+import RecordDetail from "./RecordDetail.astro";
 import RecordsList from "./RecordsList.astro";
+
+const ready = (await getCollection("records")).filter(
+  (entry) => entry.data.status === "ready",
+);
 ---
 
 <div class="modal" id="records-modal" data-records-modal role="dialog" aria-label="Comptes rendus" inert>
@@ -15,6 +22,7 @@ import RecordsList from "./RecordsList.astro";
   </div>
   <div class="content" data-records-content>
     <RecordsList />
+    {ready.map((entry) => <RecordDetail entry={entry} />)}
   </div>
 </div>
 

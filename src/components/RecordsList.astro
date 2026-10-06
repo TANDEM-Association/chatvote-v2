@@ -5,6 +5,7 @@ const records = (await getCollection("records"))
   .map(({ id, data }) => ({
     id,
     ...data,
+    count: data.items.length || data.deliberations,
     iso: data.date.toISOString().slice(0, 10),
     year: data.date.getUTCFullYear(),
   }))
@@ -33,7 +34,7 @@ const statusLabel = { ready: "Prêt", upcoming: "À venir" } as const;
           <span class="text">
             <span class="title">{record.type} du {record.iso}</span>
             <span class="meta">
-              {record.deliberations} délibération{record.deliberations > 1 ? "s" : ""}
+              {record.count} délibération{record.count > 1 ? "s" : ""}
             </span>
           </span>
           <span class="badge" data-status={record.status}>
