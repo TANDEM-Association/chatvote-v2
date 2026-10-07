@@ -98,7 +98,7 @@ PUBLIC_LOGO_TANDEM_HREF=
 PUBLIC_MORE_URL=
 
 # --- Widget Zaq ---
-PUBLIC_ZAQ_URL=https://3f64-185-83-86-177.ngrok-free.app   # ngrok temporaire
+PUBLIC_ZAQ_URL=https://zaq-staging.51.159.27.173.sslip.io   # ngrok temporaire
 PUBLIC_ZAQ_WIDGET_ID=13
 # Côté serveur uniquement
 ZAQ_SIGNING_KEY=
