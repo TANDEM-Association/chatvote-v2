@@ -6,8 +6,6 @@ import {
 } from "astro:env/server";
 import type { APIRoute } from "astro";
 import {
-  CONVERSATION_ID_COOKIE_NAME,
-  isValidConversationId,
   isValidUserId,
   signIdentityToken,
   USER_ID_COOKIE_NAME,
@@ -29,9 +27,16 @@ const json = (body: unknown, status: number) =>
     },
   });
 
-export const POST: APIRoute = ({ request, cookies }) => {
-  // Same-origin uniquement : un navigateur envoie toujours Origin sur un POST.
-  if (request.headers.get("origin") !== new URL(request.url).origin) {
+// Appelé en GET par embed.js (`data-token-url`). Same-origin uniquement : un GET
+// same-origin n'envoie pas toujours Origin, on s'appuie donc aussi sur Sec-Fetch-Site.
+const isSameOrigin = (request: Request) => {
+  const origin = request.headers.get("origin");
+  if (origin !== null) return origin === new URL(request.url).origin;
+  return request.headers.get("sec-fetch-site") === "same-origin";
+};
+
+export const GET: APIRoute = ({ request, cookies }) => {
+  if (!isSameOrigin(request)) {
     return json({ error: "forbidden" }, 403);
   }
 
@@ -48,11 +53,6 @@ export const POST: APIRoute = ({ request, cookies }) => {
     });
   }
 
-  const storedConversation = cookies.get(CONVERSATION_ID_COOKIE_NAME)?.value;
-  const conversationId = isValidConversationId(storedConversation)
-    ? storedConversation
-    : null;
-
   const identity_token = signIdentityToken(
     {
       signingKey: ZAQ_SIGNING_KEY,
@@ -60,7 +60,7 @@ export const POST: APIRoute = ({ request, cookies }) => {
       audience: ZAQ_AUDIENCE,
       widgetId: PUBLIC_ZAQ_WIDGET_ID,
     },
-    { userId, conversationId, now: Math.floor(Date.now() / 1000) },
+    { userId, now: Math.floor(Date.now() / 1000) },
   );
 
   return json({ identity_token }, 200);

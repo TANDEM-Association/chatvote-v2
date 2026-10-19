@@ -1,10 +1,16 @@
 ---
 import { PUBLIC_ZAQ_WIDGET_ID } from "astro:env/server";
 
-// URL Zaq : PUBLIC_ZAQ_URL (ngrok temporaire), voir ZAQ-WIDGET-INTEGRATION.en.md
-const zaqEmbedUrl = new URL(
-  "/web_widget/assets/embed.js",
-  import.meta.env.PUBLIC_ZAQ_URL,
+// URL Zaq : PUBLIC_ZAQ_URL, voir ZAQ-WIDGET-INTEGRATION.en.md
+const zaqUrl = import.meta.env.PUBLIC_ZAQ_URL.trim();
+// Préfixe de déploiement Zaq (ex. « /channels »), vide si Zaq est servi à la racine.
+const prefix = (import.meta.env.PUBLIC_ZAQ_PATH_PREFIX ?? "")
+  .trim()
+  .replace(/\/+$/, "");
+const zaqEmbedUrl = new URL(`${prefix}/web_widget/assets/embed.js`, zaqUrl);
+const zaqWidgetUrl = new URL(
+  `${prefix}/widget/${PUBLIC_ZAQ_WIDGET_ID}`,
+  zaqUrl,
 );
 ---
 
@@ -32,6 +38,8 @@ const zaqEmbedUrl = new URL(
   is:inline
   src={zaqEmbedUrl.toString()}
   data-widget-id={PUBLIC_ZAQ_WIDGET_ID}
+  data-widget-url={zaqWidgetUrl.toString()}
+  data-token-url="/api/widget-identity"
   iframe-location-id="#iframe-zaq"
   stylesheet-url="/zaq-widget.css"
   defer></script>

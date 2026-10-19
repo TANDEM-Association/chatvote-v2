@@ -1,6 +1,6 @@
 import { CONVERSATION_ID_COOKIE_NAME, isValidConversationId } from "./zaq-ids";
 
-/** Cookie lu par /api/widget-identity pour reprendre la conversation (posé en JS, donc sans HttpOnly). */
+/** Cookie lu par le navigateur pour reprendre la conversation (`updateContext`) ; posé en JS, donc sans HttpOnly. */
 export function buildConversationCookie(
   id: string,
   maxAgeSeconds: number,
@@ -21,4 +21,20 @@ export function storeConversationId(
   } catch {
     return false;
   }
+}
+
+/** Relit l'identifiant de conversation enregistré, ou null (absent, invalide, cookies bloqués). */
+export function readConversationId(jar: { cookie: string }): string | null {
+  try {
+    for (const part of jar.cookie.split(";")) {
+      const [name, ...rest] = part.trim().split("=");
+      if (name === CONVERSATION_ID_COOKIE_NAME) {
+        const value = rest.join("=");
+        return isValidConversationId(value) ? value : null;
+      }
+    }
+  } catch {
+    // cookies bloqués
+  }
+  return null;
 }

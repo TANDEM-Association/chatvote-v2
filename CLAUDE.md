@@ -48,9 +48,10 @@ Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/w
 ### Fonctionnement côté Zaq
 
 - `embed.js` crée lui-même `<iframe id="zaq-widget">` dans le conteneur indiqué par l'attribut `iframe-location-id`.
-- L'identité passe **uniquement** par un **JWT signé HS256**, produit par un backend : claims `widget_id`, `user_id` (≤ 255 octets, non vide), `conversation_id` (ou null), `prompt_context` (texte libre, ≤ 100 000 octets), `iss`, `aud` (doivent correspondre à la config Zaq), `iat`, `exp` (≤ 300 s après `iat`), `jti` (16–255 car., aléatoire). En-tête : `{"alg":"HS256","typ":"JWT"}`.
-- Le front appelle `await zaq.widget.init({ identity_token })` (rien d'autre dans `init`).
-- Le widget émet sur l'iframe `#zaq-widget` : `zaq:conversation` (`event.detail.conversation_id`, au premier message) et `zaq:authentication-required` (jeton expiré : récupérer un nouveau jeton et rappeler `init`).
+- L'identité passe **uniquement** par un **JWT signé HS256**, produit par un backend : claims `widget_id`, `user_id` (≤ 255 octets, non vide), `iss`, `aud` (doivent correspondre à la config Zaq), `iat`, `exp` (> `iat`, 7 jours max par défaut), `jti` (16–255 car., aléatoire), `nbf` et `profile` optionnels. **Toute autre claim est rejetée** (dont `conversation_id` et `prompt_context`). Premier usage du jeton dans les 5 s : un jeton neuf par appel. En-tête : `{"alg":"HS256","typ":"JWT"}`.
+- `embed.js` récupère et renouvelle **lui-même** le jeton : attribut `data-token-url` (chemin same-origin de notre site, appelé en `GET`, réponse `{ identity_token }`, `no-store`). `data-widget-url` = URL de l'iframe (`<ORIGINE_ZAQ><PREFIXE>/widget/<id>`, préfixe `PUBLIC_ZAQ_PATH_PREFIX` = `/channels` en staging, script en `<PREFIXE>/web_widget/assets/embed.js`). Plus d'appel à `init`.
+- Reprise de conversation et contexte côté navigateur, une fois le widget prêt : `zaq.widget.updateContext({ conversation_id })` (Zaq vérifie que la conversation appartient au visiteur ; un identifiant inconnu échoue sans créer de conversation) ou, sans identifiant, `updateContext({ prompt_context })` (appliqué à la première question seulement).
+- Le widget émet sur l'iframe `#zaq-widget` : `zaq:ready`, `zaq:authenticated`, `zaq:authentication-required`, `zaq:disconnected` (`event.detail.reason` : `expired`, `store_unavailable`, `backend_revoked`) et `zaq:conversation` (`event.detail.conversation_id`, au premier message). Le renouvellement du jeton est géré par `embed.js`.
 - Réglages : `zaq.widget.getSettings()` / `updateSettings({ theme, language })` (`theme` : light, dark, auto ; `language` : en, fr, ar).
 - Les **origines autorisées** (localhost:4321, previews Vercel, domaine final) se configurent dans le back-office Zaq (`/bo/channels/retrieval/web_widget`).
 - Le CSS de notre page **ne traverse pas l'iframe**. Le style du widget passe par l'attribut `stylesheet-url` de `embed.js` : la feuille est chargée **dans l'iframe** et définit les propriétés personnalisables `--zaq-widget-*` (couleurs, police, rayon, largeur max, marge ; voir `styling-guideline.md`, fourni par Zaq). Pas de `@layer`, pas de `!important`. L'URL relative est résolue contre l'origine de **notre** page ; les URL à l'intérieur de la feuille (polices) le sont contre la feuille. La CSP **du widget** doit autoriser notre domaine (`style-src`, `font-src`) : à vérifier avec Zaq, y compris pour chaque preview Vercel.
@@ -58,16 +59,16 @@ Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/w
 ### Notre implémentation
 
 - `src/components/ZaqWidget.astro` : conteneur `#iframe-zaq`, script `embed.js` (URL construite depuis `PUBLIC_ZAQ_URL`, `data-widget-id` depuis `PUBLIC_ZAQ_WIDGET_ID`), `stylesheet-url="/zaq-widget.css"`, script bundlé `zaq-widget.ts`, styles globaux du conteneur, et un **bloc d'accueil** (logo ChatVote + texte de présentation) placé derrière l'iframe, que le widget recouvre dès qu'on l'utilise.
-- `src/scripts/zaq-widget.ts` : attend que `zaq.widget` existe, applique `updateSettings({ theme: "dark", language: "fr" })`, récupère un jeton via `POST /api/widget-identity`, appelle `init`, redemande un jeton sur `zaq:authentication-required`, et écrit le cookie `conversationId` sur `zaq:conversation`.
-- `src/pages/api/widget-identity.ts` (`prerender = false`) : POST same-origin uniquement (en-tête `Origin` vérifié), génère ou relit le `userID`, relit `conversationId`, signe le jeton, répond `{ identity_token }` avec `Cache-Control: no-store`.
+- `src/scripts/zaq-widget.ts` : attend que `zaq.widget` existe, attend `zaq:ready` pour appliquer `updateSettings` puis `updateContext` (conversation du cookie, sinon `PROMPT_CONTEXT`), et écrit le cookie `conversationId` sur `zaq:conversation`.
+- `src/pages/api/widget-identity.ts` (`prerender = false`) : GET same-origin uniquement (`Origin`, sinon `Sec-Fetch-Site: same-origin`), génère ou relit le `userID`, signe le jeton, répond `{ identity_token }` avec `Cache-Control: no-store`.
 - `src/lib/zaq-identity.ts` (signature, serveur), `src/lib/zaq-ids.ts` (noms de cookies et validation, partagé serveur/navigateur, **sans import Node**), `src/lib/conversation-cookie.ts` (écriture du cookie dans le navigateur).
 - `astro.config.mjs` : adapter Vercel et schéma `astro:env` (secrets serveur).
 
 ### Identité, cookies et contexte
 
 - **`user_id`** : UUID v4 généré par l'endpoint, stocké dans le cookie **`userID`** posé par le **serveur** (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, durée `PUBLIC_USER_ID_COOKIE_MAX_AGE`, pas de `Domain`). Réutilisé aux visites suivantes ; valeur absente ou invalide : nouvel UUID. Le JavaScript de la page ne peut pas le lire.
-- **`conversation_id`** : cookie **`conversationId`** posé par le **navigateur** (`Secure`, `SameSite=Lax`, `Path=/`, même durée), relu par l'endpoint pour reprendre la conversation. Valeur validée (`[A-Za-z0-9_-]{1,255}`) avant d'être placée dans le jeton.
-- **`prompt_context`** : `Saint-Saturnin 63450` (constante `PROMPT_CONTEXT`). Zaq ne gère pas de code commune pour l'instant.
+- **`conversation_id`** : cookie **`conversationId`** posé par le **navigateur** (`Secure`, `SameSite=Lax`, `Path=/`, même durée), relu par le navigateur pour `updateContext({ conversation_id })`. Valeur validée (`[A-Za-z0-9_-]{1,255}`) avant usage.
+- **`prompt_context`** : `Saint-Saturnin 63450` (constante `PROMPT_CONTEXT` de `zaq-ids.ts`, envoyée via `updateContext`, plus dans le jeton). Zaq ne gère pas de code commune pour l'instant.
 - **Jeton** : HS256, durée 240 s, `jti` aléatoire.
 - Le `userID` est un identifiant **pseudonyme, pas une authentification**.
 - Ne jamais logguer ni afficher le `userID` ni le jeton.
@@ -98,7 +99,9 @@ PUBLIC_LOGO_TANDEM_HREF=
 PUBLIC_MORE_URL=
 
 # --- Widget Zaq ---
-PUBLIC_ZAQ_URL=https://zaq-staging.51.159.27.173.sslip.io   # ngrok temporaire
+PUBLIC_ZAQ_URL=https://zaq-staging.51.159.27.173.sslip.io
+# Préfixe de déploiement Zaq (vide si Zaq est servi à la racine)
+PUBLIC_ZAQ_PATH_PREFIX=/channels
 PUBLIC_ZAQ_WIDGET_ID=13
 # Côté serveur uniquement
 ZAQ_SIGNING_KEY=
@@ -148,7 +151,7 @@ src/
     Header.astro
     ZaqWidget.astro            conteneur + script embed.js + accueil
     Footer.astro
-  scripts/zaq-widget.ts        jeton d'identité, init(), cookie conversationId
+  scripts/zaq-widget.ts        settings, updateContext, cookie conversationId
   lib/zaq-identity.ts          signature du jeton HS256 (serveur)
   lib/zaq-ids.ts               noms de cookies + validation (partagé, sans import Node)
   lib/conversation-cookie.ts   écriture du cookie conversationId (navigateur)
@@ -245,7 +248,7 @@ Logo ChatVote en grand (taille relative à la hauteur de l'écran) et texte d'in
 ## Points d'attention (côté Zaq, hors périmètre de ce repo)
 
 - Ajouter nos origines (localhost, previews, domaine final) aux origines autorisées du widget.
-- Confirmer que Zaq **vérifie que la conversation appartient au `user_id`** du jeton (le cookie `conversationId` est modifiable par le visiteur).
+- Le guide indique que Zaq vérifie que la conversation appartient au `user_id` (le cookie `conversationId` est modifiable par le visiteur) : à confirmer avec Zaq.
 - Demander une **limitation de débit** par widget (notre endpoint est ouvert, voir « À trancher »).
 - Obtenir les **valeurs réelles de `iss` et `aud`**, une **URL stable** (prod et preview) et la liste des paramètres de personnalisation du widget (couleurs, polices, taille de l'iframe).
 - SEO : le contenu du widget n'est pas attribué à notre page. Soigner `title`, `description`, Open Graph, et le texte d'accueil.
@@ -270,10 +273,10 @@ Logo ChatVote en grand (taille relative à la hauteur de l'écran) et texte d'in
 ## Critères de recette
 
 - Le widget s'affiche, accepte une question, répond. Rechargement : le **même `userID`** est réutilisé et l'historique réapparaît.
-- Le jeton est renouvelé sans perdre la conversation quand il expire (`zaq:authentication-required`).
+- Le jeton est renouvelé sans perdre la conversation quand il expire (renouvellement par `embed.js`).
 - **Sur une preview Vercel (avec la CSP)** : aucune requête ni erreur bloquée par la CSP dans la console ; l'onglet Réseau n'affiche aucune requête vers un domaine autre que le nôtre et celui de Zaq.
 - Notre domaine pose **exactement deux cookies** (`userID` HttpOnly + `conversationId`), avec les attributs prévus (`Secure`, `SameSite=Lax`, `Path=/`, durée voulue), et **aucun** `localStorage`/`sessionStorage` dans notre origine.
-- `POST /api/widget-identity` depuis un autre site ou sans en-tête `Origin` : refusé (403).
+- `GET /api/widget-identity` depuis un autre site ou sans `Origin` ni `Sec-Fetch-Site: same-origin` : refusé (403).
 - Aucune clé (`ZAQ_SIGNING_KEY`) dans le build client ni dans l'historique Git.
 - Cookies bloqués par le navigateur : le site ne plante pas (le widget démarre une nouvelle conversation, sans erreur visible).
 - Pas de défilement parasite sur mobile (iOS Safari, Chrome Android) : le widget remplit exactement l'espace entre header et footer.
