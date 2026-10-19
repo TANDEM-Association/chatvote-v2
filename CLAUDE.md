@@ -69,7 +69,7 @@ Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/w
 - **`user_id`** : UUID v4 généré par l'endpoint, stocké dans le cookie **`userID`** posé par le **serveur** (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, durée `PUBLIC_USER_ID_COOKIE_MAX_AGE`, pas de `Domain`). Réutilisé aux visites suivantes ; valeur absente ou invalide : nouvel UUID. Le JavaScript de la page ne peut pas le lire.
 - **`conversation_id`** : cookie **`conversationId`** posé par le **navigateur** (`Secure`, `SameSite=Lax`, `Path=/`, même durée), relu par le navigateur pour `updateContext({ conversation_id })`. Valeur validée (`[A-Za-z0-9_-]{1,255}`) avant usage.
 - **`prompt_context`** : `Saint-Saturnin 63450` (constante `PROMPT_CONTEXT` de `zaq-ids.ts`, envoyée via `updateContext`, plus dans le jeton). Zaq ne gère pas de code commune pour l'instant.
-- **Jeton** : HS256, durée 240 s, `jti` aléatoire.
+- **Jeton** : HS256, durée 7 jours, `jti` aléatoire.
 - Le `userID` est un identifiant **pseudonyme, pas une authentification**.
 - Ne jamais logguer ni afficher le `userID` ni le jeton.
 

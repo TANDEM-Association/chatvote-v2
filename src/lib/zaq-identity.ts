@@ -9,7 +9,7 @@ export {
 } from "./zaq-ids";
 
 /** Durée de validité du jeton, en secondes (Zaq : 7 jours au maximum par défaut ; le jeton doit être utilisé dans les 5 s). */
-export const TOKEN_TTL_SECONDS = 240;
+export const TOKEN_TTL_SECONDS = 7 * 24 * 3600;
 
 export interface IdentityConfig {
   signingKey: string;
