@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   isValidConversationId,
   isValidUserId,
-  PROMPT_CONTEXT,
   signIdentityToken,
   TOKEN_TTL_SECONDS,
 } from "./zaq-identity";
@@ -22,7 +21,6 @@ const decode = (part: string) =>
 describe("signIdentityToken", () => {
   const token = signIdentityToken(config, {
     userId: USER,
-    conversationId: null,
     now: 1000,
     jti: "0123456789abcdef",
   });
@@ -40,8 +38,6 @@ describe("signIdentityToken", () => {
     expect(decode(payload)).toEqual({
       widget_id: 13,
       user_id: USER,
-      conversation_id: null,
-      prompt_context: PROMPT_CONTEXT,
       iss: "iss-test",
       aud: "aud-test",
       iat: 1000,
@@ -50,8 +46,15 @@ describe("signIdentityToken", () => {
     });
   });
 
-  it("expire au plus 300 s après l'émission", () => {
-    expect(TOKEN_TTL_SECONDS).toBeLessThanOrEqual(300);
+  it("expire après l'émission, sans dépasser 7 jours", () => {
+    expect(TOKEN_TTL_SECONDS).toBeGreaterThan(0);
+    expect(TOKEN_TTL_SECONDS).toBeLessThanOrEqual(7 * 24 * 3600);
+  });
+
+  it("ne contient pas de claim inconnue de Zaq", () => {
+    const claims = Object.keys(decode(payload));
+    expect(claims).not.toContain("conversation_id");
+    expect(claims).not.toContain("prompt_context");
   });
 
   it("est signé en HMAC-SHA256 avec la clé", () => {
@@ -64,12 +67,10 @@ describe("signIdentityToken", () => {
   it("génère un jti de 16 à 255 caractères par défaut", () => {
     const t = signIdentityToken(config, {
       userId: USER,
-      conversationId: "abc",
       now: 1,
     });
     const claims = decode(t.split(".")[1] as string);
     expect(claims.jti.length).toBeGreaterThanOrEqual(16);
-    expect(claims.conversation_id).toBe("abc");
   });
 });
 

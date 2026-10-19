@@ -4,14 +4,11 @@ export {
   CONVERSATION_ID_COOKIE_NAME,
   isValidConversationId,
   isValidUserId,
+  PROMPT_CONTEXT,
   USER_ID_COOKIE_NAME,
 } from "./zaq-ids";
 
-/** Contexte transmis au chat (V1 : une seule commune). */
-export const PROMPT_CONTEXT =
-  "Je vais te poser des questions sur la ville de Saint-Saturnin dont le code postal est 63450";
-
-/** Durée de validité du jeton, en secondes (Zaq accepte 300 au maximum). */
+/** Durée de validité du jeton, en secondes (Zaq : 7 jours au maximum par défaut ; le jeton doit être utilisé dans les 5 s). */
 export const TOKEN_TTL_SECONDS = 240;
 
 export interface IdentityConfig {
@@ -23,7 +20,6 @@ export interface IdentityConfig {
 
 export interface IdentityInput {
   userId: string;
-  conversationId: string | null;
   /** Secondes Unix. */
   now: number;
   jti?: string;
@@ -32,7 +28,7 @@ export interface IdentityInput {
 const base64url = (input: string | Buffer) =>
   Buffer.from(input).toString("base64url");
 
-/** Signe un jeton d'identité HS256 pour le widget Zaq. */
+/** Signe un jeton d'identité HS256 pour le widget Zaq. Zaq rejette toute claim inconnue (dont `conversation_id` et `prompt_context`). */
 export function signIdentityToken(
   config: IdentityConfig,
   input: IdentityInput,
@@ -42,8 +38,6 @@ export function signIdentityToken(
     JSON.stringify({
       widget_id: config.widgetId,
       user_id: input.userId,
-      conversation_id: input.conversationId,
-      prompt_context: PROMPT_CONTEXT,
       iss: config.issuer,
       aud: config.audience,
       iat: input.now,

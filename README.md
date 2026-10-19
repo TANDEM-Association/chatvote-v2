@@ -43,7 +43,7 @@ Les variables sont documentées dans [`.env.example`](.env.example).
 ## Fonctionnement du widget
 
 1. `ZaqWidget.astro` charge `embed.js` depuis l'origine Zaq, qui crée l'iframe du chat.
-2. `src/scripts/zaq-widget.ts` demande un jeton à `POST /api/widget-identity`, puis appelle `zaq.widget.init({ identity_token })`.
+2. `src/scripts/zaq-widget.ts` applique réglages et contexte (`updateSettings`, `updateContext`) quand le widget est prêt ; `embed.js` récupère lui-même le jeton via `GET /api/widget-identity` (`data-token-url`).
 3. L'endpoint génère (ou relit) un `userID` (UUID v4, cookie HttpOnly) et signe un JWT HS256 de courte durée avec `node:crypto`.
 4. Le jeton est renouvelé automatiquement à son expiration, sans perdre la conversation (cookie `conversationId`).
 5. Le style du widget passe par [`public/zaq-widget.css`](public/zaq-widget.css) (propriétés `--zaq-widget-*`).

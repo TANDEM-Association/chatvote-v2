@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildConversationCookie,
+  readConversationId,
   storeConversationId,
 } from "./conversation-cookie";
 
@@ -32,5 +33,29 @@ describe("storeConversationId", () => {
       },
     };
     expect(storeConversationId(jar, "42", 100)).toBe(false);
+  });
+});
+
+describe("readConversationId", () => {
+  it("relit l'identifiant valide", () => {
+    expect(readConversationId({ cookie: "a=1; conversationId=42; b=2" })).toBe(
+      "42",
+    );
+  });
+
+  it.each(["", "a=1", "conversationId=a b", "conversationId="])(
+    "renvoie null pour %j",
+    (cookie) => {
+      expect(readConversationId({ cookie })).toBeNull();
+    },
+  );
+
+  it("renvoie null si les cookies sont bloqués", () => {
+    const jar = {
+      get cookie(): string {
+        throw new Error("blocked");
+      },
+    };
+    expect(readConversationId(jar)).toBeNull();
   });
 });

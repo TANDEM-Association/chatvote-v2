@@ -1,11 +1,19 @@
-import { storeConversationId } from "../lib/conversation-cookie";
+import {
+  readConversationId,
+  storeConversationId,
+} from "../lib/conversation-cookie";
+import { PROMPT_CONTEXT } from "../lib/zaq-ids";
 
 interface ZaqWidget {
-  init(options: { identity_token: string }): Promise<unknown>;
+  isReady(): boolean;
   updateSettings(settings: {
     theme?: "light" | "dark" | "auto";
     language?: "en" | "fr" | "ar";
-  }): Promise<unknown>;
+  }): Promise<unknown> | unknown;
+  updateContext(context: {
+    conversation_id?: string;
+    prompt_context?: string;
+  }): Promise<unknown> | unknown;
 }
 
 declare global {
@@ -14,46 +22,31 @@ declare global {
   }
 }
 
-const IDENTITY_ENDPOINT = "/api/widget-identity";
 const COOKIE_MAX_AGE = Number(
   import.meta.env.PUBLIC_USER_ID_COOKIE_MAX_AGE ?? 31536000,
 );
 
-async function fetchIdentityToken(): Promise<string> {
-  const response = await fetch(IDENTITY_ENDPOINT, {
-    method: "POST",
-    credentials: "same-origin",
-  });
-  if (!response.ok) throw new Error(`identité Zaq : HTTP ${response.status}`);
-  const { identity_token } = (await response.json()) as {
-    identity_token?: unknown;
-  };
-  if (typeof identity_token !== "string") {
-    throw new Error("identité Zaq : jeton absent");
-  }
-  return identity_token;
+/** Réglages et contexte, à (ré)appliquer quand le widget est prêt. */
+async function configure(widget: ZaqWidget) {
+  await widget.updateSettings({ theme: "dark", language: "fr" });
+  // Conversation connue : Zaq vérifie qu'elle appartient au visiteur. Sinon,
+  // le contexte ne vaut que pour la première question d'une nouvelle conversation.
+  const conversationId = readConversationId(document);
+  await widget.updateContext(
+    conversationId
+      ? { conversation_id: conversationId }
+      : { prompt_context: PROMPT_CONTEXT },
+  );
 }
 
-let pending: Promise<void> | null = null;
-
-/** Récupère un jeton puis (ré)initialise le widget. Un seul appel à la fois. */
-function authenticate(widget: ZaqWidget): Promise<void> {
-  pending ??= fetchIdentityToken()
-    .then((identity_token) => widget.init({ identity_token }))
-    .then(() => undefined)
-    .finally(() => {
-      pending = null;
-    });
-  return pending;
-}
-
-async function setup(widget: ZaqWidget) {
-  // Les événements sont émis sur l'iframe #zaq-widget, créée par embed.js :
-  // écoute en capture sur le document, quel que soit le moment de sa création.
+function setup(widget: ZaqWidget) {
+  // embed.js récupère et renouvelle le jeton (data-token-url). Les événements
+  // sont émis sur l'iframe #zaq-widget, créée à l'exécution : écoute en capture
+  // sur le document.
   document.addEventListener(
-    "zaq:authentication-required",
+    "zaq:ready",
     () => {
-      authenticate(widget).catch(console.error);
+      Promise.resolve(configure(widget)).catch(console.error);
     },
     true,
   );
@@ -67,12 +60,14 @@ async function setup(widget: ZaqWidget) {
     true,
   );
 
-  await widget.updateSettings({ theme: "dark", language: "fr" });
-  await authenticate(widget);
+  // `zaq:ready` a pu être émis avant notre écoute.
+  if (widget.isReady()) {
+    Promise.resolve(configure(widget)).catch(console.error);
+  }
 }
 
 /** embed.js est chargé en defer : on attend que `zaq.widget` existe. */
-function whenWidgetReady(callback: (widget: ZaqWidget) => void) {
+function whenWidgetExists(callback: (widget: ZaqWidget) => void) {
   let started = false;
   const check = () => {
     const widget = window.zaq?.widget;
@@ -91,6 +86,4 @@ function whenWidgetReady(callback: (widget: ZaqWidget) => void) {
   window.addEventListener("load", check);
 }
 
-whenWidgetReady((widget) => {
-  setup(widget).catch(console.error);
-});
+whenWidgetExists(setup);
