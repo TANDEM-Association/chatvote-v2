@@ -28,15 +28,21 @@ const COOKIE_MAX_AGE = Number(
 
 /** Réglages et contexte, à (ré)appliquer quand le widget est prêt. */
 async function configure(widget: ZaqWidget) {
-  await widget.updateSettings({ theme: "dark", language: "fr" });
   // Conversation connue : Zaq vérifie qu'elle appartient au visiteur. Sinon,
   // le contexte ne vaut que pour la première question d'une nouvelle conversation.
+  // Appelé en premier, comme dans le guide Zaq (directement au `zaq:ready`).
   const conversationId = readConversationId(document);
-  await widget.updateContext(
-    conversationId
-      ? { conversation_id: conversationId }
-      : { prompt_context: PROMPT_CONTEXT },
-  );
+  try {
+    await widget.updateContext(
+      conversationId
+        ? { conversation_id: conversationId }
+        : { prompt_context: PROMPT_CONTEXT },
+    );
+  } catch (error) {
+    console.error(error);
+  }
+  // Un échec de la reprise ne doit pas empêcher les réglages.
+  await widget.updateSettings({ theme: "dark", language: "fr" });
 }
 
 function setup(widget: ZaqWidget) {
