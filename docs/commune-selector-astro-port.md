@@ -86,15 +86,23 @@ Les deux procédures sont publiques (pas d'authentification).
 ### `commune.search`
 - **Entrée :** `{ query: string }`, 2 à 100 caractères, `trim()` côté serveur.
 - **Sortie :** liste de communes avec `communeCode`, `name`, `departmentCode`, `departmentName`, `regionName`, `postalCodes` (tableau), `epci?: { id, name }`.
-- **Requête :** `communes` en `LEFT JOIN institution_communes` puis `LEFT JOIN institutions`, ce dernier filtré sur les types d'EPCI. D'où la clé de liste `${communeCode}-${epci?.id ?? "none"}` côté client : une commune peut apparaître plusieurs fois si elle a plusieurs EPCI.
+- **Requête :** `communes` en `LEFT JOIN institution_communes` puis `LEFT JOIN institutions`, ce dernier filtré sur **trois** types seulement : `communaute_de_communes`, `agglomeration`, `syndicat`. (Le switcher en reconnaît cinq, car `communaute_urbaine` et `metropole` s'y ajoutent ; ils n'apparaissent donc jamais comme badge « EPCI » dans les résultats de recherche. Ce n'est pas un bug en pratique : `scripts/seed-epcis.ts` mappe `CC` → `communaute_de_communes` et `CA`/`CU`/`METRO`/`MET69` → `agglomeration`, donc les données seedées ne contiennent jamais `communaute_urbaine` ni `metropole`. Le type `syndicat` n'est produit par aucun script de ce dossier.)
+- **Filtre :** `ilike` sur le nom (`%terme%`), `ilike` sur le code INSEE (préfixe `terme%`), et `ilike` sur `postal_codes::text` (`%terme%`). La recherche couvre donc le nom, le code INSEE et le code postal.
+- **Limite :** 20 lignes SQL, avant dédoublonnage.
+- **Dédoublonnage côté serveur :** les jointures produisent une ligne par appartenance à une institution. Une commune avec son conseil municipal et un EPCI apparaît deux fois, dont une ligne sans EPCI. Le serveur garde **une seule entrée par commune**, en préférant la ligne qui porte l'EPCI. Le résultat peut donc contenir moins de 20 communes. La clé de liste côté client reste `${communeCode}-${epci?.id ?? "none"}`.
 - En cas d'erreur de base : renvoyer une erreur serveur explicite (le code d'origine journalise la cause et lève `INTERNAL_SERVER_ERROR` « Municipality search failed »).
 
 ### `commune.getInstitutions`
 - **Entrée :** `{ communeCode: /^\d{5}$/ }`.
 - **Sortie :** `[{ institutionId, role, institutionName, institutionType }]`, jointure `institution_communes` ↔ `institutions` filtrée sur le code.
 
-### Récupération du nom de la commune
-La page déduit le nom à partir du code via une autre requête sur `communes`. Si la requête échoue, le nom retombe sur le code. Je n'ai pas relu cette procédure ; vérifiez-la dans `routers/commune.ts` (autour de la ligne 20) avant de la porter.
+### Codes INSEE corses : écart avec l'original
+Les trois procédures (`getByCode`, `getInstitutions`, et la page) valident le code avec `/^\d{5}$/`. Or le snapshot `communes-all.json.gz` contient **360 communes corses** dont le code commence par `2A` ou `2B` (par exemple `2A004`). Ces communes sont rejetées par l'application d'origine : l'URL `?commune=2A004` est effacée et `getByCode` refuse l'entrée. `extracted/commune-code.ts` accepte `^(\d{5}|2[AB]\d{3})$` ; appliquez la même regex dans les schémas d'entrée de l'API de la nouvelle app. Cette correction est un changement de comportement par rapport à ChatVote.
+
+### `commune.getByCode`
+- **Entrée :** `{ communeCode: /^\d{5}$/ }`.
+- **Sortie :** `{ name, departmentName }` ou `null` si la commune n'existe pas (`limit(1)`).
+- La page l'appelle pour afficher le nom dans la pastille ; si la requête n'a pas encore répondu, le code sert de libellé provisoire.
 
 **Pour Astro :** si l'API reste celle de ChatVote, appelez ces endpoints en HTTP (tRPC expose du JSON sur `/api/trpc/...`, ou créez deux endpoints REST fins). Si vous portez aussi la base, deux requêtes SQL suffisent. Le bornage des entrées (longueur max de la recherche, regex INSEE) doit être conservé : c'est une protection contre les abus.
 
@@ -121,10 +129,8 @@ Choix principal à trancher : écrire l'îlot dans le même framework que celui 
 
 ## 9. Ce qui n'a pas été vérifié
 
-Cette spécification vient de la lecture de `commune-switcher.tsx`, `commune-selector.tsx`, `commune-tabs.tsx`, `conseil-nav-controls.tsx`, `recent-communes.ts`, d'extraits de `app/chat/page.tsx` et de `routers/commune.ts`. Je n'ai pas lu :
-- la fin de la procédure `commune.search` (filtre exact sur `institutions.type`, tri, limite de résultats) ;
-- la procédure qui renvoie le nom d'une commune ;
-- `chat-start-flow.tsx`, qui réutilise `CommuneSelector` dans l'écran de démarrage ;
-- `institution-labels.ts` (la table complète des libellés français).
+Cette spécification vient de la lecture de `commune-switcher.tsx`, `commune-selector.tsx`, `commune-tabs.tsx`, `conseil-nav-controls.tsx`, `recent-communes.ts`, `institution-labels.ts`, d'extraits de `app/chat/page.tsx` et de `routers/commune.ts` (`search`, `getByCode`, `getInstitutions`). Je n'ai pas lu en entier :
+- `chat-start-flow.tsx`, qui réutilise `CommuneSelector` dans l'écran de démarrage (seulement ses imports et ses grandes lignes) ;
+- les indexes SQL réellement présents en base pour la recherche `ilike` (performance).
 
-À relire avant de figer le contrat d'API de la nouvelle app.
+Je n'ai pas exécuté l'application ni les tests pour confirmer le comportement décrit.
