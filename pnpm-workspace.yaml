@@ -3,3 +3,5 @@ allowBuilds:
 overrides:
   # @vercel/routing-utils épingle path-to-regexp@6.1.0 (ReDoS, GHSA-9wv6-86v2-598j) : forcer le correctif 6.x.
   path-to-regexp@6.1.0: 6.3.0
+  # @vercel/nft épingle glob@13 (GHSA-3g3m-2fjr-6pw4) et, via lui, minimatch<11 (GHSA-g3hv-75wg-m249) : glob@14 corrige les deux.
+  glob@13: 14.0.3
