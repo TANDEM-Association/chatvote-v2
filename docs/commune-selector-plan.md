@@ -1,6 +1,6 @@
 # Sélecteur de commune : plan validé et aide-mémoire de recette
 
-Statut : **plan validé le 2026-11-05, pas encore implémenté.** Branche : `6-sélecteur-de-villes`.
+Statut : **plan validé le 2026-11-05, implémenté (étapes 0 à 6) ; recette en cours.** Branche : `6-sélecteur-de-villes`.
 
 Documents liés :
 - [commune-selector-astro-port.md](commune-selector-astro-port.md) : première spécification, issue de l'ancienne app Next.js (en partie dépassée par ce plan).

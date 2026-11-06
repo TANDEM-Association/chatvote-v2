@@ -11,10 +11,10 @@ Recréer ChatVote en version minimale. Le site ne contient que :
 3. le **widget de chat Zaq**, qui remplit l'espace entre le header et le footer (application distincte, autre domaine, intégrée via son script `embed.js`),
 4. un **footer** simple.
 
-Toute la logique métier (IA, données, historique des conversations) vit chez Zaq. Le site ne contient que la logique nécessaire à l'intégration : **un seul endpoint serveur**, qui signe le jeton d'identité du visiteur (voir « Intégration du widget Zaq »).
+Toute la logique métier (IA, données, historique des conversations) vit chez Zaq. Le site ne contient que la logique nécessaire à l'intégration : **deux routes serveur** : l'endpoint qui signe le jeton d'identité du visiteur (voir « Intégration du widget Zaq ») et la page d'accueil, rendue à la demande selon la commune choisie (voir « Sélecteur de commune »).
 
 Référence historique : `https://app.chatvote.org/chat?municipality_code=63396` (ancienne version, Next.js).
-V1 : commune **Saint-Saturnin 63450** (transmise à Zaq comme contexte, voir plus bas).
+Commune par défaut : **Saint-Saturnin (INSEE 63396)**. La commune se choisit via `?commune=<INSEE>` (voir « Sélecteur de commune »).
 
 Historique : une première version intégrait le chat via notre propre iframe (code commune + `userID` en paramètres d'URL). Elle a été **supprimée** au profit du widget Zaq ; elle reste récupérable dans l'historique Git.
 
@@ -22,7 +22,7 @@ Historique : une première version intégrait le chat via notre propre iframe (c
 
 | Sujet | Décision |
 |---|---|
-| Framework | **Astro 7.x**, site **statique** par défaut ; **une seule route à la demande** (`/api/widget-identity`) |
+| Framework | **Astro 7.x**, site **statique** par défaut ; **deux routes à la demande** (`/api/widget-identity` et `index.astro`) |
 | Node | **24 LTS** (Astro 7 exige ≥ 22.12, versions paires uniquement). `.nvmrc` + `engines` |
 | Langage | TypeScript strict |
 | Gestionnaire | **pnpm** (champ `packageManager` dans `package.json`) |
@@ -59,7 +59,7 @@ Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/w
 ### Notre implémentation
 
 - `src/components/ZaqWidget.astro` : conteneur `#iframe-zaq`, script `embed.js` (URL construite depuis `PUBLIC_ZAQ_URL`, `data-widget-id` depuis `PUBLIC_ZAQ_WIDGET_ID`), `stylesheet-url="/zaq-widget.css"`, script bundlé `zaq-widget.ts`, styles globaux du conteneur, et un **bloc d'accueil** (logo ChatVote + texte de présentation) placé derrière l'iframe, que le widget recouvre dès qu'on l'utilise.
-- `src/scripts/zaq-widget.ts` : attend que `zaq.widget` existe, attend `zaq:ready` pour appliquer `updateSettings` puis `updateContext` (conversation du cookie, sinon `PROMPT_CONTEXT`), et écrit le cookie `conversationId` sur `zaq:conversation`.
+- `src/scripts/zaq-widget.ts` : attend que `zaq.widget` existe, attend `zaq:ready` pour appliquer `updateSettings` puis `updateContext` (conversation du cookie pour la commune courante, sinon le `prompt_context` de la commune), et écrit le cookie `conversationId` sur `zaq:conversation`.
 - `src/pages/api/widget-identity.ts` (`prerender = false`) : GET same-origin uniquement (`Origin`, sinon `Sec-Fetch-Site: same-origin`), génère ou relit le `userID`, signe le jeton, répond `{ identity_token }` avec `Cache-Control: no-store`.
 - `src/lib/zaq-identity.ts` (signature, serveur), `src/lib/zaq-ids.ts` (noms de cookies et validation, partagé serveur/navigateur, **sans import Node**), `src/lib/conversation-cookie.ts` (écriture du cookie dans le navigateur).
 - `astro.config.mjs` : adapter Vercel et schéma `astro:env` (secrets serveur).
@@ -67,8 +67,8 @@ Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/w
 ### Identité, cookies et contexte
 
 - **`user_id`** : UUID v4 généré par l'endpoint, stocké dans le cookie **`userID`** posé par le **serveur** (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, durée `PUBLIC_USER_ID_COOKIE_MAX_AGE`, pas de `Domain`). Réutilisé aux visites suivantes ; valeur absente ou invalide : nouvel UUID. Le JavaScript de la page ne peut pas le lire.
-- **`conversation_id`** : cookie **`conversationId`** posé par le **navigateur** (`Secure`, `SameSite=Lax`, `Path=/`, même durée), relu par le navigateur pour `updateContext({ conversation_id })`. Valeur validée (`[A-Za-z0-9_-]{1,255}`) avant usage.
-- **`prompt_context`** : `Saint-Saturnin 63450` (constante `PROMPT_CONTEXT` de `zaq-ids.ts`, envoyée via `updateContext`, plus dans le jeton). Zaq ne gère pas de code commune pour l'instant.
+- **`conversation_id`** : cookie **`conversationId`** posé par le **navigateur** (`Secure`, `SameSite=Lax`, `Path=/`, même durée), de valeur **`<codeCommune>:<conversationId>`**. Relu pour `updateContext({ conversation_id })` seulement si la commune correspond ; l'ancien format (sans commune) est ignoré. Identifiant validé (`[A-Za-z0-9_-]{1,255}`) avant usage. À valider avec Zaq en staging.
+- **`prompt_context`** : construit par `buildPromptContext` (`src/lib/commune/prompt-context.ts`) à partir de nos données (nom, code postal ou département), transmis au navigateur via les attributs `data-*` de `.stage[data-chat-frame]` et envoyé par `updateContext`. Zaq ne gère pas de code commune.
 - **Jeton** : HS256, durée 7 jours, `jti` aléatoire.
 - Le `userID` est un identifiant **pseudonyme, pas une authentification**.
 - Ne jamais logguer ni afficher le `userID` ni le jeton.
@@ -108,6 +108,16 @@ ZAQ_SIGNING_KEY=
 ZAQ_ISSUER=test-widget
 ZAQ_AUDIENCE=zaq-web-widget
 ```
+
+## Sélecteur de commune
+
+Plan et recette détaillés : `docs/commune-selector-plan.md`.
+
+- `index.astro` est rendue à la demande : `?commune=<INSEE>` absent → Saint-Saturnin ; format invalide → 302 vers `/` ; code inconnu → 404 ; commune connue mais absente de `src/data/availability.ts` → page « non disponible » **sans** script Zaq (ni jeton ni cookie) ; disponible → widget avec `prompt_context`.
+- L'URL est la seule source de vérité : changer de commune = navigation complète (Zaq n'a pas d'API de nouvelle conversation). Pas de `localStorage`.
+- Données statiques : snapshot geo.api.gouv.fr dans `data/communes/` (sha256 vérifié), index généré par `pnpm build:data` (lancé avant `dev`, `build`, `check`). Ajouter une commune disponible = ajouter son code INSEE à `AVAILABLE_COMMUNES`.
+- Comptes rendus filtrés par la clé `commune` du frontmatter. EPCI préparés (types, `institution`), données à importer plus tard.
+- `refactor-commune-selector/` est conservé mais exclu de Biome, astro check, vitest et tsconfig.
 
 ## Contraintes de confidentialité
 
@@ -150,13 +160,19 @@ src/
     AnnouncementBar.astro
     Header.astro
     ZaqWidget.astro            conteneur + script embed.js + accueil
+    CommuneTrigger / CommunePopover / CommuneUnavailable
     Footer.astro
   scripts/zaq-widget.ts        settings, updateContext, cookie conversationId
   lib/zaq-identity.ts          signature du jeton HS256 (serveur)
   lib/zaq-ids.ts               noms de cookies + validation (partagé, sans import Node)
-  lib/conversation-cookie.ts   écriture du cookie conversationId (navigateur)
-  pages/index.astro
-  pages/api/widget-identity.ts endpoint à la demande (seule route non statique)
+  lib/conversation-cookie.ts   cookie conversationId « commune:id » (navigateur)
+  lib/commune/                 sélecteur : code INSEE, index, recherche, contexte, requête, UI
+  data/availability.ts         communes (et EPCI) disponibles dans ChatVote
+  data/generated/              index des communes généré au build (gitignoré)
+  scripts/commune-switcher.ts  popover de recherche (navigateur)
+  pages/index.astro            à la demande : chat, page « non disponible » ou 404
+  pages/communes-index.json.ts index de recherche, prérendu
+  pages/api/widget-identity.ts endpoint à la demande
   styles/
     tokens.css                 tokens Tandem adaptés (voir plus bas)
     fonts.css                  @font-face Manrope (fichiers locaux)
@@ -275,6 +291,7 @@ Logo ChatVote en grand (taille relative à la hauteur de l'écran) et texte d'in
 - Le widget s'affiche, accepte une question, répond. Rechargement : le **même `userID`** est réutilisé et l'historique réapparaît.
 - Le jeton est renouvelé sans perdre la conversation quand il expire (renouvellement par `embed.js`).
 - **Sur une preview Vercel (avec la CSP)** : aucune requête ni erreur bloquée par la CSP dans la console ; l'onglet Réseau n'affiche aucune requête vers un domaine autre que le nôtre et celui de Zaq.
+- Sélecteur : recherche (nom, INSEE, code postal), clavier, mobile 375 px, changement de commune puis reprise de conversation côté Zaq ; voir `docs/commune-selector-plan.md` §11.
 - Notre domaine pose **exactement deux cookies** (`userID` HttpOnly + `conversationId`), avec les attributs prévus (`Secure`, `SameSite=Lax`, `Path=/`, durée voulue), et **aucun** `localStorage`/`sessionStorage` dans notre origine.
 - `GET /api/widget-identity` depuis un autre site ou sans `Origin` ni `Sec-Fetch-Site: same-origin` : refusé (403).
 - Aucune clé (`ZAQ_SIGNING_KEY`) dans le build client ni dans l'historique Git.
