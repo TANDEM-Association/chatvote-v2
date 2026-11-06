@@ -8,5 +8,8 @@ dist/
 .DS_Store
 node_modules
 
+# Index des communes, généré par `pnpm build:data` depuis data/communes/
+src/data/generated/
+
 # Notes internes (ne pas pousser)
 SECURITY-AUDIT.md
