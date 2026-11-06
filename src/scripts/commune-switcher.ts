@@ -152,7 +152,8 @@ function setup(
       const meta = document.createElement("span");
       meta.className = "commune-hit__meta";
       meta.textContent = display.meta;
-      main.append(name, meta);
+      main.append(name);
+      if (display.meta) main.append(meta);
       link.append(main);
 
       if (display.available) {

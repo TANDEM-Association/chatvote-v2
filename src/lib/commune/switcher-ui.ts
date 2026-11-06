@@ -13,17 +13,18 @@ export function buildCommuneHref(code: string): string {
 
 export interface HitDisplay {
   name: string;
-  /** « Puy-de-Dôme · 63396 (63450) » ; département omis s'il porte le même nom que la commune. */
+  /** « Puy-de-Dôme · 63450 » ; département omis s'il porte le même nom que la commune, vide s'il n'y a rien à afficher. */
   meta: string;
   available: boolean;
 }
 
 export function describeHit(hit: SearchHit): HitDisplay {
-  const department = hit.departmentLabel ? `${hit.departmentLabel} · ` : "";
-  const postalCode = hit.postalCode ? ` (${hit.postalCode})` : "";
+  const meta = [hit.departmentLabel, hit.postalCode]
+    .filter(Boolean)
+    .join(" · ");
   return {
     name: hit.name,
-    meta: `${department}${hit.code}${postalCode}`,
+    meta,
     available: hit.available,
   };
 }
