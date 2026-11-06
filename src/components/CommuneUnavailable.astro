@@ -45,7 +45,7 @@ const content =
             target="_blank"
             rel="noopener noreferrer"
           >
-            Soutenir ChatVote
+            Ouvrir cette commune
             <span class="sr-only"> (s'ouvre dans un nouvel onglet)</span>
           </a>
         )
@@ -103,11 +103,16 @@ const content =
 
   .button {
     padding: var(--space-3) var(--space-6);
-    background: var(--brand-indigo);
+    background: var(--brand-orange);
     border-radius: var(--radius-full);
     color: #fff;
     font-weight: 700;
     text-decoration: none;
+
+    /* Le contour de focus est orange aussi : on le décale pour qu'il reste visible. */
+    &:focus-visible {
+      outline-offset: 3px;
+    }
 
     &:hover {
       filter: brightness(1.15);
