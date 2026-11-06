@@ -1,8 +1,14 @@
+import { isValidCommuneCode } from "../lib/commune/commune-code";
 import {
   readConversationId,
   storeConversationId,
 } from "../lib/conversation-cookie";
-import { PROMPT_CONTEXT } from "../lib/zaq-ids";
+
+/** Commune affichée et contexte à transmettre, posés par le serveur sur [data-chat-frame] (ZaqWidget.astro). */
+interface ChatContext {
+  communeCode: string;
+  promptContext: string;
+}
 
 interface ZaqWidget {
   isReady(): boolean;
@@ -26,17 +32,31 @@ const COOKIE_MAX_AGE = Number(
   import.meta.env.PUBLIC_USER_ID_COOKIE_MAX_AGE ?? 31536000,
 );
 
+function readChatContext(): ChatContext | null {
+  const frame = document.querySelector<HTMLElement>("[data-chat-frame]");
+  const communeCode = frame?.dataset.communeCode;
+  const promptContext = frame?.dataset.promptContext;
+  if (!isValidCommuneCode(communeCode) || !promptContext) {
+    console.error(
+      "[zaq-widget] Commune ou contexte absent de [data-chat-frame] : widget non configuré.",
+    );
+    return null;
+  }
+  return { communeCode, promptContext };
+}
+
 /** Réglages et contexte, à (ré)appliquer quand le widget est prêt. */
-async function configure(widget: ZaqWidget) {
-  // Conversation connue : Zaq vérifie qu'elle appartient au visiteur. Sinon,
-  // le contexte ne vaut que pour la première question d'une nouvelle conversation.
+async function configure(widget: ZaqWidget, chat: ChatContext) {
+  // Conversation connue de CETTE commune : Zaq vérifie qu'elle appartient au
+  // visiteur. Sinon (aucune, ou celle d'une autre commune), le contexte ne vaut
+  // que pour la première question d'une nouvelle conversation.
   // Appelé en premier, comme dans le guide Zaq (directement au `zaq:ready`).
-  const conversationId = readConversationId(document);
+  const conversationId = readConversationId(document, chat.communeCode);
   try {
     await widget.updateContext(
       conversationId
         ? { conversation_id: conversationId }
-        : { prompt_context: PROMPT_CONTEXT },
+        : { prompt_context: chat.promptContext },
     );
   } catch (error) {
     console.error(error);
@@ -46,13 +66,16 @@ async function configure(widget: ZaqWidget) {
 }
 
 function setup(widget: ZaqWidget) {
+  const chat = readChatContext();
+  if (!chat) return;
+
   // embed.js récupère et renouvelle le jeton (data-token-url). Les événements
   // sont émis sur l'iframe #zaq-widget, créée à l'exécution : écoute en capture
   // sur le document.
   document.addEventListener(
     "zaq:ready",
     () => {
-      Promise.resolve(configure(widget)).catch(console.error);
+      Promise.resolve(configure(widget, chat)).catch(console.error);
     },
     true,
   );
@@ -61,14 +84,19 @@ function setup(widget: ZaqWidget) {
     (event) => {
       const detail = (event as CustomEvent<{ conversation_id?: unknown }>)
         .detail;
-      storeConversationId(document, detail?.conversation_id, COOKIE_MAX_AGE);
+      storeConversationId(
+        document,
+        chat.communeCode,
+        detail?.conversation_id,
+        COOKIE_MAX_AGE,
+      );
     },
     true,
   );
 
   // `zaq:ready` a pu être émis avant notre écoute.
   if (widget.isReady()) {
-    Promise.resolve(configure(widget)).catch(console.error);
+    Promise.resolve(configure(widget, chat)).catch(console.error);
   }
 }
 
