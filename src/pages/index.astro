@@ -1,13 +1,49 @@
 ---
+// Seule page du site, rendue à la demande : le serveur lit `?commune=` (code
+// INSEE) et décide entre le chat, la page « non disponible » et le 404.
+// Voir docs/commune-selector-plan.md.
+export const prerender = false;
+
+import CommuneUnavailable from "../components/CommuneUnavailable.astro";
 import RecordsModal from "../components/RecordsModal.astro";
 import ZaqWidget from "../components/ZaqWidget.astro";
+import { isCommuneAvailable } from "../data/availability";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { resolveCommuneRequest } from "../lib/commune/commune-request";
+import { findCommune } from "../lib/commune/communes-data";
+
+const request = resolveCommuneRequest(Astro.url.searchParams.get("commune"), {
+  find: findCommune,
+  isAvailable: isCommuneAvailable,
+});
+
+if (request.kind === "redirect") {
+  return Astro.redirect(request.location, 302);
+}
+if (request.kind === "not-found") {
+  Astro.response.status = 404;
+}
+
+const description =
+  "ChatVote est une initiative associative open source et souveraine pour s'informer sur ce qui est décidé par vos élus locaux.";
+const title =
+  request.kind === "available"
+    ? "ChatVote - Comprendre la politique de manière interactive"
+    : "ChatVote - Commune non disponible";
 ---
 
-<BaseLayout
-  title="ChatVote - Comprendre la politique de manière interactive"
-  description="ChatVote est une initiative associative open source et souveraine pour s'informer sur ce qui est décidé par vos élus locaux."
->
-  <ZaqWidget />
+<BaseLayout title={title} description={description} noindex={request.kind !== "available"}>
+  {
+    request.kind === "available" ? (
+      <ZaqWidget
+        communeCode={request.commune.code}
+        promptContext={request.promptContext}
+      />
+    ) : request.kind === "unavailable" ? (
+      <CommuneUnavailable variant="unavailable" communeName={request.commune.name} />
+    ) : (
+      <CommuneUnavailable variant="not-found" />
+    )
+  }
   <RecordsModal />
 </BaseLayout>

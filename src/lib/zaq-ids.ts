@@ -5,10 +5,6 @@ export const USER_ID_COOKIE_NAME = "userID";
 /** Cookie posé par le navigateur à l'événement `zaq:conversation` : reprise de la conversation. */
 export const CONVERSATION_ID_COOKIE_NAME = "conversationId";
 
-/** Contexte transmis au chat via `updateContext` (V1 : une seule commune). Appliqué à la première question d'une nouvelle conversation. */
-export const PROMPT_CONTEXT =
-  "Je vais te poser des questions sur la ville de Saint-Saturnin dont le code postal est 63450";
-
 const UUID_V4_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 // Format de l'identifiant de conversation non documenté par Zaq : on accepte

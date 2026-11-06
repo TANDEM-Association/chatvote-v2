@@ -1,6 +1,15 @@
 ---
 import { PUBLIC_ZAQ_WIDGET_ID } from "astro:env/server";
 
+interface Props {
+  /** Code INSEE de la commune affichée (cookie de conversation). */
+  communeCode: string;
+  /** Contexte transmis à Zaq pour la première question (voir buildPromptContext). */
+  promptContext: string;
+}
+
+const { communeCode, promptContext } = Astro.props;
+
 // URL Zaq : PUBLIC_ZAQ_URL, voir ZAQ-WIDGET-INTEGRATION.en.md
 const zaqUrl = import.meta.env.PUBLIC_ZAQ_URL.trim();
 // Préfixe de déploiement Zaq (ex. « /channels »), vide si Zaq est servi à la racine.
@@ -14,7 +23,12 @@ const zaqWidgetUrl = new URL(
 );
 ---
 
-<div class="stage" data-chat-frame>
+<div
+  class="stage"
+  data-chat-frame
+  data-commune-code={communeCode}
+  data-prompt-context={promptContext}
+>
   <!-- Accueil : le widget Zaq le recouvre dès qu'on l'utilise -->
   <div class="welcome">
     <img

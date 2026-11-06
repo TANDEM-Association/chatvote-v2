@@ -4,7 +4,6 @@ export {
   CONVERSATION_ID_COOKIE_NAME,
   isValidConversationId,
   isValidUserId,
-  PROMPT_CONTEXT,
   USER_ID_COOKIE_NAME,
 } from "./zaq-ids";
 
