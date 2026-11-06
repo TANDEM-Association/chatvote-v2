@@ -117,7 +117,7 @@ Plan et recette détaillés : `docs/commune-selector-plan.md`.
 - L'URL est la seule source de vérité : changer de commune = navigation complète (Zaq n'a pas d'API de nouvelle conversation). Pas de `localStorage`.
 - Données statiques : snapshot geo.api.gouv.fr dans `data/communes/` (sha256 vérifié), index généré par `pnpm build:data` (lancé avant `dev`, `build`, `check`). Ajouter une commune disponible = ajouter son code INSEE à `AVAILABLE_COMMUNES`.
 - Comptes rendus filtrés par la clé `commune` du frontmatter. EPCI préparés (types, `institution`), données à importer plus tard.
-- `refactor-commune-selector/` est conservé mais exclu de Biome, astro check, vitest et tsconfig.
+- Le kit de portage `refactor-commune-selector/` a été supprimé (récupérable dans l'historique Git).
 
 ## Contraintes de confidentialité
 
