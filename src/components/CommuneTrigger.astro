@@ -1,0 +1,131 @@
+---
+// Bouton qui ouvre le sélecteur de commune (voir CommunePopover.astro).
+//  - « pill » : dans le header, à partir de 1024 px ;
+//  - « bar »  : barre de 44 px sous le header, en dessous de 1024 px.
+// Le nom de la commune est rendu par le serveur : aucun JS pour l'afficher.
+
+interface Props {
+  variant: "pill" | "bar";
+  /** Absent quand la commune demandée est introuvable. */
+  name?: string | undefined;
+}
+
+const { variant, name } = Astro.props;
+const label = name ?? "Choisir une commune";
+const accessibleName = name
+  ? `Commune : ${name}. Changer de commune`
+  : "Choisir une commune";
+---
+
+<button
+  type="button"
+  class:list={["trigger", variant]}
+  popovertarget="commune-popover"
+  aria-haspopup="dialog"
+  aria-expanded="false"
+  aria-label={accessibleName}
+  data-commune-trigger
+  data-variant={variant}
+>
+  <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </svg>
+  <span class="kind">Commune</span>
+  <span class="name">{label}</span>
+  <svg class="chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+</button>
+
+<style>
+  .trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    color: var(--ink);
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .icon,
+  .chevron {
+    flex: none;
+  }
+
+  .chevron {
+    color: var(--ink-secondary);
+    transition: rotate 0.15s;
+  }
+
+  .trigger[aria-expanded="true"] .chevron {
+    rotate: 180deg;
+  }
+
+  .kind {
+    color: var(--ink-secondary);
+    font-size: 0.625rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Mobile : barre pleine largeur sous le header. */
+  .bar {
+    width: 100%;
+    height: 2.75rem;
+    padding-inline: var(--gutter);
+    background: var(--surface-100);
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.875rem;
+
+    & .name {
+      flex: 1;
+      text-align: start;
+    }
+  }
+
+  /* Bureau : pastille dans le header. */
+  .pill {
+    display: none;
+    height: 3rem;
+    padding-inline: var(--space-4);
+    background: var(--surface-200);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: var(--body-sm-size);
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--ink) 34%, transparent);
+    }
+
+    & .name {
+      max-width: 14rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .bar {
+      display: none;
+    }
+
+    .pill {
+      display: flex;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chevron {
+      transition: none;
+    }
+  }
+</style>

@@ -1,5 +1,13 @@
 ---
+import CommuneTrigger from "./CommuneTrigger.astro";
 import ViewToggle from "./ViewToggle.astro";
+
+interface Props {
+  /** Nom de la commune affichée ; absent si elle est introuvable. */
+  communeName?: string | undefined;
+}
+
+const { communeName } = Astro.props;
 
 // Logo ChatVote « par » logo Tandem. Contenu final à définir avec le porteur du projet.
 // TODO: PUBLIC_LOGO_HREF à définir (clic sur le logo ChatVote) ; vide = logo sans lien.
@@ -21,7 +29,10 @@ const logoTandemHref = import.meta.env.PUBLIC_LOGO_TANDEM_HREF;
   <a class="brand" href={logoTandemHref} target="_blank" rel="noopener noreferrer" aria-label="Tandem (s'ouvre dans un nouvel onglet)" >
   <img class="tandem" src="/tandem-logo.svg" alt="Tandem, tech et démocratie" width="402" height="140" />
   </a>
-  <ViewToggle />
+  <div class="end">
+    <CommuneTrigger variant="pill" name={communeName} />
+    <ViewToggle />
+  </div>
 </header>
 
 <style>
@@ -37,6 +48,14 @@ const logoTandemHref = import.meta.env.PUBLIC_LOGO_TANDEM_HREF;
 
   .brand {
     display: flex;
+  }
+
+  /* Pastille de commune (≥ 1024 px) et bascule, poussées à droite. */
+  .end {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-inline-start: auto;
   }
 
   .logo {
