@@ -1,7 +1,12 @@
 ---
-import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
 
-const records = (await getCollection("records"))
+interface Props {
+  /** Comptes rendus de la commune courante (filtrés par RecordsModal). */
+  records: CollectionEntry<"records">[];
+}
+
+const records = Astro.props.records
   .map(({ id, data }) => ({
     id,
     ...data,
