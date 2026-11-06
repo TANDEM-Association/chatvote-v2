@@ -3,7 +3,6 @@
 // Aucun script Zaq ici : ni jeton, ni cookie. Le conteneur porte [data-chat-frame]
 // pour que la bascule « Comptes rendus » (records-modal.ts) fonctionne aussi.
 //
-// Textes PROVISOIRES, à personnaliser avec le porteur du projet (CTA crowdfunding).
 
 interface Props {
   variant: "unavailable" | "not-found";
@@ -17,7 +16,7 @@ const content =
   variant === "unavailable"
     ? {
         title: `${communeName} n'est pas encore disponible dans ChatVote`,
-        text: "Nous ouvrons les communes une à une. Votre soutien nous aide à accueillir la vôtre plus vite.",
+        text: "Ouvrir une commune nous coûte 250€. Votre soutien nous aide à accueillir la vôtre plus vite.",
       }
     : {
         title: "Cette commune est introuvable",
@@ -89,7 +88,7 @@ const content =
   }
 
   .text {
-    color: var(--ink-secondary);
+    color: var(--ink);
     text-wrap: balance;
   }
 
