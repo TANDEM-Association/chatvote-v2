@@ -4,7 +4,7 @@ Statut : **plan validé le 2026-11-05, implémenté (étapes 0 à 6) ; recette e
 
 Documents liés :
 - [commune-selector-astro-port.md](commune-selector-astro-port.md) : première spécification, issue de l'ancienne app Next.js (en partie dépassée par ce plan).
-- `refactor-commune-selector/` : kit de portage (code d'origine, modules extraits, snapshot des communes). Gardé dans le dépôt, **exclu** de Biome, `astro check`, `vitest` et `tsconfig`. À supprimer une fois le portage validé, avec l'accord du porteur du projet.
+- `refactor-commune-selector/` : kit de portage (code d'origine, modules extraits, snapshot des communes). **Supprimé du dépôt** après le portage ; récupérable dans l'historique Git.
 - Maquettes interactives : https://claude.ai/artifact/GSQU6YxhKc5vCfxEj48Km4 (lien privé).
 
 ## 1. Objectif
