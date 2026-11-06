@@ -94,33 +94,40 @@ const { currentCode } = Astro.props;
     text-transform: uppercase;
   }
 
+  /* Champ repris de la recherche de commune du site Tandem (CommuneSearch.module.css). */
   .commune-search {
+    --field-ink: #170742;
+    --field-ink-muted: rgba(23, 7, 66, 0.65);
     display: flex;
     align-items: center;
-    gap: var(--space-2);
-    height: 2.75rem;
-    padding-inline: var(--space-3);
-    /* Champ blanc, texte marine : le popover reste sombre autour. */
-    --field-ink: var(--surface-100);
-    --field-ink-muted: color-mix(in srgb, var(--surface-100) 60%, white);
-    background: white;
-    border: 1px solid transparent;
+    gap: var(--space-3);
+    height: 3.25rem;
+    padding-block: 0;
+    padding-inline: var(--space-6) var(--space-4);
+    background: #fbfbfb;
     border-radius: var(--radius-full);
-    color: var(--field-ink-muted);
+    color: var(--field-ink);
 
     &:focus-within {
-      border-color: var(--focus-ring);
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    svg {
+      flex-shrink: 0;
     }
   }
 
   .commune-search__input {
     flex: 1;
     min-width: 0;
+    height: 100%;
     background: transparent;
     border: 0;
     color: var(--field-ink);
     font: inherit;
-    font-size: 0.875rem;
+    /* 16 px : évite aussi le zoom automatique d'iOS Safari au focus. */
+    font-size: 1rem;
 
     /* Le contour est porté par le conteneur (:focus-within). */
     &:focus-visible {
