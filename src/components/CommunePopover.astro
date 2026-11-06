@@ -100,10 +100,13 @@ const { currentCode } = Astro.props;
     gap: var(--space-2);
     height: 2.75rem;
     padding-inline: var(--space-3);
-    background: var(--surface-100);
-    border: 1px solid var(--border);
+    /* Champ blanc, texte marine : le popover reste sombre autour. */
+    --field-ink: var(--surface-100);
+    --field-ink-muted: color-mix(in srgb, var(--surface-100) 60%, white);
+    background: white;
+    border: 1px solid transparent;
     border-radius: var(--radius-full);
-    color: var(--ink-secondary);
+    color: var(--field-ink-muted);
 
     &:focus-within {
       border-color: var(--focus-ring);
@@ -115,7 +118,7 @@ const { currentCode } = Astro.props;
     min-width: 0;
     background: transparent;
     border: 0;
-    color: var(--ink);
+    color: var(--field-ink);
     font: inherit;
     font-size: 0.875rem;
 
@@ -125,7 +128,7 @@ const { currentCode } = Astro.props;
     }
 
     &::placeholder {
-      color: var(--ink-secondary);
+      color: var(--field-ink-muted);
     }
   }
 
@@ -138,7 +141,7 @@ const { currentCode } = Astro.props;
     background: transparent;
     border: 0;
     border-radius: var(--radius-full);
-    color: var(--ink-secondary);
+    color: var(--field-ink-muted);
     cursor: pointer;
 
     &[hidden] {
@@ -146,7 +149,7 @@ const { currentCode } = Astro.props;
     }
 
     &:hover {
-      color: var(--ink);
+      color: var(--field-ink);
     }
   }
 
