@@ -2,13 +2,27 @@
 // Modale qui recouvre le chat (mais ni le header ni le footer).
 // Vue liste + une vue détail par compte rendu prêt, toutes rendues au build ;
 // records-modal.ts bascule de l'une à l'autre.
+// Ne montre que les comptes rendus de la commune courante ; sans aucun, un
+// message à la place de la liste.
 import { getCollection } from "astro:content";
 import RecordDetail from "./RecordDetail.astro";
 import RecordsList from "./RecordsList.astro";
 
-const ready = (await getCollection("records")).filter(
-  (entry) => entry.data.status === "ready",
-);
+interface Props {
+  /** Code INSEE de la commune affichée ; absent si la commune est introuvable. */
+  communeCode?: string | undefined;
+  communeName?: string | undefined;
+}
+
+const { communeCode, communeName } = Astro.props;
+
+const records = communeCode
+  ? await getCollection("records", ({ data }) => data.commune === communeCode)
+  : [];
+const ready = records.filter((entry) => entry.data.status === "ready");
+const emptyMessage = communeName
+  ? `Les comptes rendus de ${communeName} ne sont pas encore disponibles dans ChatVote.`
+  : "Aucun compte rendu à afficher.";
 ---
 
 <div class="modal" id="records-modal" data-records-modal role="dialog" aria-label="Comptes rendus" inert>
@@ -21,8 +35,16 @@ const ready = (await getCollection("records")).filter(
     </button>
   </div>
   <div class="content" data-records-content>
-    <RecordsList />
-    {ready.map((entry) => <RecordDetail entry={entry} />)}
+    {
+      records.length > 0 ? (
+        <>
+          <RecordsList records={records} />
+          {ready.map((entry) => <RecordDetail entry={entry} />)}
+        </>
+      ) : (
+        <p class="empty" data-records-empty>{emptyMessage}</p>
+      )
+    }
   </div>
 </div>
 
@@ -93,6 +115,11 @@ const ready = (await getCollection("records")).filter(
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+  }
+
+  .empty {
+    padding: var(--space-6) var(--gutter);
+    color: var(--modal-ink-secondary);
   }
 
   @media (prefers-reduced-motion: reduce) {

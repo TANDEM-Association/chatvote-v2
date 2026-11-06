@@ -24,6 +24,11 @@ if (request.kind === "not-found") {
   Astro.response.status = 404;
 }
 
+const commune =
+  request.kind === "available" || request.kind === "unavailable"
+    ? request.commune
+    : undefined;
+
 const description =
   "ChatVote est une initiative associative open source et souveraine pour s'informer sur ce qui est décidé par vos élus locaux.";
 const title =
@@ -45,5 +50,5 @@ const title =
       <CommuneUnavailable variant="not-found" />
     )
   }
-  <RecordsModal />
+  <RecordsModal communeCode={commune?.code} communeName={commune?.name} />
 </BaseLayout>

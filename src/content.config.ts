@@ -1,6 +1,7 @@
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
+import { INSEE_COMMUNE_CODE_REGEX } from "./lib/commune/commune-code";
 
 // Un fichier par compte rendu. Les métadonnées alimentent la vue liste de la
 // modale ; le corps Markdown (copié tel quel de la source) et `items` forment
@@ -16,6 +17,14 @@ const item = z.object({
 const records = defineCollection({
   loader: glob({ pattern: "*.md", base: "./src/content/records" }),
   schema: z.object({
+    // Commune du compte rendu (code INSEE) : seule la modale de cette commune l'affiche.
+    commune: z.string().regex(INSEE_COMMUNE_CODE_REGEX),
+    // Institution (SIREN d'un EPCI), pour les comptes rendus qui ne sont pas ceux
+    // du conseil municipal. Prévu pour l'arrivée des EPCI, pas encore utilisé.
+    institution: z
+      .string()
+      .regex(/^\d{9}$/)
+      .optional(),
     // Libellé affiché : « Procès-verbal » ou autre type de document.
     type: z.string().default("Procès-verbal"),
     date: z.coerce.date(),
