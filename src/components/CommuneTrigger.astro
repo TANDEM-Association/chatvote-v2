@@ -40,11 +40,14 @@ const accessibleName = name
 
 <style>
   .trigger {
+    /* Fond clair, texte marine (comme le champ de recherche du popover). */
+    --trigger-ink: #170742;
+    --trigger-ink-muted: rgba(23, 7, 66, 0.65);
     display: flex;
     align-items: center;
     gap: var(--space-2);
     min-width: 0;
-    color: var(--ink);
+    color: var(--trigger-ink);
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
@@ -56,7 +59,7 @@ const accessibleName = name
   }
 
   .chevron {
-    color: var(--ink-secondary);
+    color: var(--trigger-ink-muted);
     transition: rotate 0.15s;
   }
 
@@ -65,7 +68,7 @@ const accessibleName = name
   }
 
   .kind {
-    color: var(--ink-secondary);
+    color: var(--trigger-ink-muted);
     font-size: 0.625rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -83,9 +86,8 @@ const accessibleName = name
     width: 100%;
     height: 2.75rem;
     padding-inline: var(--gutter);
-    background: var(--surface-100);
+    background: #fbfbfb;
     border: 0;
-    border-bottom: 1px solid var(--border);
     font-size: 0.875rem;
 
     & .name {
@@ -99,13 +101,13 @@ const accessibleName = name
     display: none;
     height: 3rem;
     padding-inline: var(--space-4);
-    background: var(--surface-200);
-    border: 1px solid var(--border);
+    background: #fbfbfb;
+    border: 0;
     border-radius: var(--radius-full);
     font-size: var(--body-sm-size);
 
     &:hover {
-      border-color: color-mix(in srgb, var(--ink) 34%, transparent);
+      background: #ebe9f2;
     }
 
     & .name {
