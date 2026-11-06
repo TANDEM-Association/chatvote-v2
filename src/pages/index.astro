@@ -37,7 +37,12 @@ const title =
     : "ChatVote - Commune non disponible";
 ---
 
-<BaseLayout title={title} description={description} noindex={request.kind !== "available"}>
+<BaseLayout
+  title={title}
+  description={description}
+  noindex={request.kind !== "available"}
+  commune={commune}
+>
   {
     request.kind === "available" ? (
       <ZaqWidget

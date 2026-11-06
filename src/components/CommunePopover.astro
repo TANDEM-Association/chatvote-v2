@@ -1,0 +1,225 @@
+---
+// Popover natif du sélecteur de commune, ouvert par CommuneTrigger. Le champ de
+// recherche et la liste sont pilotés par src/scripts/commune-switcher.ts.
+// Les résultats sont de vrais liens `/?commune=…` : la navigation fonctionne
+// même sans JavaScript côté liens.
+
+interface Props {
+  /** Code INSEE de la commune affichée, `undefined` si introuvable. */
+  currentCode?: string | undefined;
+}
+
+const { currentCode } = Astro.props;
+---
+
+<div
+  id="commune-popover"
+  class="commune-popover"
+  popover
+  role="dialog"
+  aria-label="Changer de commune"
+  data-commune-popover
+  data-current-code={currentCode}
+>
+  <p class="commune-popover__label">Changer de commune</p>
+  <div class="commune-search">
+    <svg class="commune-search__icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+    <input
+      class="commune-search__input"
+      type="text"
+      inputmode="search"
+      enterkeyhint="search"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      maxlength="100"
+      placeholder="Nom ou code postal"
+      aria-label="Rechercher une commune"
+      aria-controls="commune-results"
+      aria-describedby="commune-status"
+      data-commune-input
+    />
+    <button type="button" class="commune-search__clear" aria-label="Effacer la recherche" data-commune-clear hidden>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M18 6 6 18M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+  <p class="commune-status" id="commune-status" role="status" aria-live="polite" data-commune-status></p>
+  <ul class="commune-results" id="commune-results" data-commune-results></ul>
+</div>
+
+<script>
+  import "../scripts/commune-switcher";
+</script>
+
+<!-- Global : les résultats sont créés par le script, les styles scopés d'Astro ne les atteignent pas -->
+<style is:global>
+  .commune-popover {
+    inset: auto;
+    margin: 0;
+    width: 20rem;
+    max-width: calc(100vw - 1rem);
+    padding: var(--space-3);
+    flex-direction: column;
+    gap: var(--space-2);
+    background: var(--surface-200);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    box-shadow: 0 18px 48px rgb(5 0 25 / 0.55);
+    overflow: hidden;
+
+    &:popover-open {
+      display: flex;
+    }
+  }
+
+  /* Navigateur sans API popover : le bloc reste caché plutôt que de s'afficher dans la page. */
+  @supports not selector(:popover-open) {
+    .commune-popover {
+      display: none;
+    }
+  }
+
+  .commune-popover__label {
+    padding-inline: var(--space-1);
+    color: var(--ink-secondary);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .commune-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 2.75rem;
+    padding-inline: var(--space-3);
+    background: var(--surface-100);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    color: var(--ink-secondary);
+
+    &:focus-within {
+      border-color: var(--focus-ring);
+    }
+  }
+
+  .commune-search__input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.875rem;
+
+    /* Le contour est porté par le conteneur (:focus-within). */
+    &:focus-visible {
+      outline: none;
+    }
+
+    &::placeholder {
+      color: var(--ink-secondary);
+    }
+  }
+
+  .commune-search__clear {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-full);
+    color: var(--ink-secondary);
+    cursor: pointer;
+
+    &[hidden] {
+      display: none;
+    }
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
+
+  .commune-status {
+    padding-inline: var(--space-1);
+    color: var(--ink-secondary);
+    font-size: var(--body-sm-size);
+    line-height: var(--body-sm-line);
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  .commune-results {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  .commune-hit {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: 0.625rem;
+    color: inherit;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--ink) 8%, transparent);
+    }
+  }
+
+  .commune-hit__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .commune-hit__name {
+    overflow: hidden;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .commune-hit__meta {
+    color: var(--ink-secondary);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .commune-hit__badge {
+    flex: none;
+    padding: 3px var(--space-2);
+    border: 1px solid #6fe3a5;
+    border-radius: var(--radius-full);
+    color: #6fe3a5;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+</style>
