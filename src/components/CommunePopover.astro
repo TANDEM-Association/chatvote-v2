@@ -177,9 +177,14 @@ const { currentCode } = Astro.props;
     gap: 2px;
     min-height: 0;
     margin: 0;
-    padding: 0;
     overflow-y: auto;
     list-style: none;
+    /* Panneau clair, comme la liste de suggestions du site Tandem. */
+    padding: var(--space-2);
+    background: #fbfbfb;
+    color: #170742;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 24px rgb(5 0 25 / 0.35);
 
     &:empty {
       display: none;
@@ -198,7 +203,12 @@ const { currentCode } = Astro.props;
 
     &:hover,
     &:focus-visible {
-      background: color-mix(in srgb, var(--ink) 8%, transparent);
+      background: rgba(23, 7, 66, 0.08);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: -2px;
     }
   }
 
@@ -217,7 +227,7 @@ const { currentCode } = Astro.props;
   }
 
   .commune-hit__meta {
-    color: var(--ink-secondary);
+    color: rgba(23, 7, 66, 0.65);
     font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
   }
@@ -225,9 +235,9 @@ const { currentCode } = Astro.props;
   .commune-hit__badge {
     flex: none;
     padding: 3px var(--space-2);
-    border: 1px solid #6fe3a5;
+    border: 1px solid #0b7a43;
     border-radius: var(--radius-full);
-    color: #6fe3a5;
+    color: #0b7a43;
     font-size: 0.625rem;
     font-weight: 700;
     letter-spacing: 0.04em;
