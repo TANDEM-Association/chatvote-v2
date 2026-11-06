@@ -1,6 +1,0 @@
-{
-  "sourceUrl": "https://geo.api.gouv.fr/communes?fields=code,nom,codesPostaux,population,departement,region&limit=40000",
-  "retrievedAt": "2026-09-30",
-  "count": 34969,
-  "sha256": "0629c040f137202362ccb2dd529383ddb768bc3a1e8433d70e2293cc04ed9d4f"
-}
