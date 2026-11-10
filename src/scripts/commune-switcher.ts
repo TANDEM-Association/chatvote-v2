@@ -2,7 +2,7 @@
 // L'URL reste la source de vérité : choisir une commune est un simple lien
 // (`/?commune=…`), donc une navigation complète. Aucun stockage local.
 
-import { isCommuneAvailable } from "../data/availability";
+import { getCommuneStatus } from "../data/availability";
 import type { CommuneIndex } from "../lib/commune/communes-index";
 import {
   foldText,
@@ -56,7 +56,7 @@ function setup(
         }
         return response.json() as Promise<CommuneIndex>;
       })
-      .then((index) => prepareSearchIndex(index, isCommuneAvailable))
+      .then((index) => prepareSearchIndex(index, getCommuneStatus))
       .catch((error) => {
         entriesPromise = undefined;
         throw error;
@@ -156,10 +156,11 @@ function setup(
       if (display.meta) main.append(meta);
       link.append(main);
 
-      if (display.available) {
+      if (display.badge) {
         const badge = document.createElement("span");
         badge.className = "commune-hit__badge";
-        badge.textContent = "Disponible";
+        badge.dataset.status = display.badge.status;
+        badge.textContent = display.badge.label;
         link.append(badge);
       }
       item.append(link);

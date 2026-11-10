@@ -5,11 +5,12 @@
 //  - 2 à 100 caractères, 20 résultats au plus, une entrée par commune ;
 //  - par nom (n'importe où dans le nom), code INSEE (début) ou code postal (début) ;
 //  - insensible à la casse, aux accents, aux tirets et aux apostrophes ;
-//  - communes disponibles d'abord, puis population décroissante, puis nom.
+//  - par statut (disponible, financée, partiellement financée, non financée), puis population décroissante, puis nom.
 //
 // Écart avec l'app d'origine : le code postal est comparé au début (comme le
 // code INSEE) et non n'importe où, pour que « 63 » ne remonte pas toute la France.
 
+import type { CommuneStatus } from "../../data/availability";
 import { type CommuneIndex, toCommune } from "./communes-index";
 
 export const SEARCH_MIN_LENGTH = 2;
@@ -33,6 +34,14 @@ export function foldText(value: string): string {
     .trim();
 }
 
+/** Ordre d'affichage : les communes les plus proches de l'ouverture d'abord. */
+const STATUS_RANK: Record<CommuneStatus, number> = {
+  available: 0,
+  funded: 1,
+  "partially-funded": 2,
+  unfunded: 3,
+};
+
 export interface SearchEntry {
   code: string;
   name: string;
@@ -42,7 +51,7 @@ export interface SearchEntry {
   codeKey: string;
   departmentName: string;
   postalCodes: readonly string[];
-  available: boolean;
+  status: CommuneStatus;
 }
 
 export interface SearchHit {
@@ -52,7 +61,7 @@ export interface SearchHit {
   departmentLabel: string | null;
   /** Premier code postal, `null` si la commune n'en a aucun. */
   postalCode: string | null;
-  available: boolean;
+  status: CommuneStatus;
 }
 
 /**
@@ -61,7 +70,7 @@ export interface SearchHit {
  */
 export function prepareSearchIndex(
   index: CommuneIndex,
-  isAvailable: (code: string) => boolean,
+  getStatus: (code: string) => CommuneStatus,
 ): SearchEntry[] {
   const entries = index.communes.map(
     (tuple): SearchEntry & { population: number } => {
@@ -73,7 +82,7 @@ export function prepareSearchIndex(
         codeKey: commune.code.toLowerCase(),
         departmentName: commune.departmentName,
         postalCodes: commune.postalCodes,
-        available: isAvailable(commune.code),
+        status: getStatus(commune.code),
         // Population absente (6 communes) : traitée comme 0 pour le tri uniquement.
         population: commune.population ?? 0,
       };
@@ -81,7 +90,7 @@ export function prepareSearchIndex(
   );
   entries.sort(
     (a, b) =>
-      Number(b.available) - Number(a.available) ||
+      STATUS_RANK[a.status] - STATUS_RANK[b.status] ||
       b.population - a.population ||
       a.name.localeCompare(b.name, "fr"),
   );
@@ -123,7 +132,7 @@ export function searchCommunes(
           ? null
           : entry.departmentName,
       postalCode: entry.postalCodes[0] ?? null,
-      available: entry.available,
+      status: entry.status,
     });
     if (hits.length === SEARCH_LIMIT) {
       break;

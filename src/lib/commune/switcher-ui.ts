@@ -1,6 +1,7 @@
 // Logique d'interface du sélecteur de commune, sans DOM : testable seule.
 // Utilisée par src/scripts/commune-switcher.ts (navigateur, aucun import Node).
 
+import type { CommuneStatus } from "../../data/availability";
 import type { SearchHit } from "./search";
 
 /** Délai avant de lancer la recherche après la dernière frappe. */
@@ -15,8 +16,15 @@ export interface HitDisplay {
   name: string;
   /** « Puy-de-Dôme · 63450 » ; département omis s'il porte le même nom que la commune, vide s'il n'y a rien à afficher. */
   meta: string;
-  available: boolean;
+  /** Pastille à afficher, `null` pour une commune non financée. */
+  badge: { label: string; status: CommuneStatus } | null;
 }
+
+const BADGE_LABELS: Partial<Record<CommuneStatus, string>> = {
+  available: "Disponible",
+  "partially-funded": "En cours de financement",
+  funded: "En cours d'ajout",
+};
 
 export function describeHit(hit: SearchHit): HitDisplay {
   const meta = [hit.departmentLabel, hit.postalCode]
@@ -25,7 +33,9 @@ export function describeHit(hit: SearchHit): HitDisplay {
   return {
     name: hit.name,
     meta,
-    available: hit.available,
+    badge: BADGE_LABELS[hit.status]
+      ? { label: BADGE_LABELS[hit.status] as string, status: hit.status }
+      : null,
   };
 }
 

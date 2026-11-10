@@ -7,14 +7,14 @@ export const prerender = false;
 import CommuneUnavailable from "../components/CommuneUnavailable.astro";
 import RecordsModal from "../components/RecordsModal.astro";
 import ZaqWidget from "../components/ZaqWidget.astro";
-import { isCommuneAvailable } from "../data/availability";
+import { getCommuneStatus } from "../data/availability";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { resolveCommuneRequest } from "../lib/commune/commune-request";
 import { findCommune } from "../lib/commune/communes-data";
 
 const request = resolveCommuneRequest(Astro.url.searchParams.get("commune"), {
   find: findCommune,
-  isAvailable: isCommuneAvailable,
+  getStatus: getCommuneStatus,
 });
 
 if (request.kind === "redirect") {
@@ -50,7 +50,10 @@ const title =
         promptContext={request.promptContext}
       />
     ) : request.kind === "unavailable" ? (
-      <CommuneUnavailable variant="unavailable" communeName={request.commune.name} />
+      <CommuneUnavailable
+        variant={request.status}
+        communeName={request.commune.name}
+      />
     ) : (
       <CommuneUnavailable variant="not-found" />
     )

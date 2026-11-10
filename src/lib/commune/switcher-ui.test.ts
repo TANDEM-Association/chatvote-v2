@@ -23,14 +23,14 @@ describe("describeHit", () => {
     name: "Saint-Saturnin",
     departmentLabel: "Puy-de-Dôme",
     postalCode: "63450",
-    available: true,
+    status: "available",
   };
 
   it("affiche département et code postal, sans code INSEE", () => {
     expect(describeHit(hit)).toEqual({
       name: "Saint-Saturnin",
       meta: "Puy-de-Dôme · 63450",
-      available: true,
+      badge: { label: "Disponible", status: "available" },
     });
   });
 
@@ -42,9 +42,20 @@ describe("describeHit", () => {
         code: "75056",
         departmentLabel: null,
         postalCode: "75001",
-        available: false,
+        status: "unfunded",
       }),
-    ).toEqual({ name: "Paris", meta: "75001", available: false });
+    ).toEqual({ name: "Paris", meta: "75001", badge: null });
+  });
+
+  it("affiche une pastille pour les communes en cours de financement ou d'ajout", () => {
+    expect(describeHit({ ...hit, status: "partially-funded" }).badge).toEqual({
+      label: "En cours de financement",
+      status: "partially-funded",
+    });
+    expect(describeHit({ ...hit, status: "funded" }).badge).toEqual({
+      label: "En cours d'ajout",
+      status: "funded",
+    });
   });
 
   it("omet le code postal quand il n'y en a pas", () => {
