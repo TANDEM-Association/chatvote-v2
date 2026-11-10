@@ -1,7 +1,7 @@
 ---
 // Page statique (prérendue). Structure reprise de la politique de confidentialité du
-// site Tandem, adaptée à ChatVote. Les passages « À COMPLÉTER » dépendent de Zaq
-// et sont à renseigner avant publication.
+// site Tandem, adaptée à ChatVote. Les passages « À COMPLÉTER » restent à
+// renseigner avant publication.
 import LegalPage from "../components/LegalPage.astro";
 
 const tandemHref = (import.meta.env.PUBLIC_LOGO_TANDEM_HREF ?? "").replace(
@@ -32,7 +32,7 @@ const optOutUrl = matomoUrl
 >
   <Fragment slot="intro">
     <p class="version">Version du 10 novembre 2026</p>
-    <p class="intro lead">Sur ChatVote, vous restez anonyme.</p>
+    <p class="intro lead">Sur ChatVote, personne ne vous demande qui vous êtes.</p>
     <p class="intro lead">
       Pas de compte à créer : nous ne vous demandons ni votre nom, ni votre
       adresse e-mail, et nous ne cherchons pas à savoir qui vous êtes. Votre
@@ -74,7 +74,8 @@ const optOutUrl = matomoUrl
 
     <h3>Conversations avec l’assistant</h3>
     <p>
-      L’assistant de ChatVote est fourni par la solution Zaq, intégrée à la page.
+      L’assistant de ChatVote repose sur la solution Zaq, intégrée à la page et
+      hébergée par TANDEM elle-même.
       Lorsque vous l’utilisez, les données suivantes sont traitées :
     </p>
     <ul>
@@ -95,13 +96,14 @@ const optOutUrl = matomoUrl
       conversation.
     </p>
     <p>
-      Base légale : [À COMPLÉTER : à valider avec la personne en charge du
-      juridique].
+      Base légale : l’intérêt légitime de l’association à fournir le service que
+      vous utilisez et à conserver votre historique de conversation (article
+      6.1.f du RGPD). Vous pouvez vous y opposer à tout moment (voir « Quels
+      sont vos droits relatifs aux données collectées ? »).
     </p>
     <p>
       Durée de conservation : l’identifiant technique est conservé {cookieMonths} mois
-      sur votre appareil. Les conversations sont conservées [À COMPLÉTER :
-      durée côté Zaq].
+      sur votre appareil.
     </p>
     <p>
       Merci de ne pas saisir de données personnelles vous concernant ou
@@ -121,7 +123,7 @@ const optOutUrl = matomoUrl
   <section class="block">
     <h2>3. Mesure d’audience</h2>
     <p>
-      Nous mesurons la fréquentation de ce site avec Matomo, un outil de mesure
+      Nous mesurons la fréquentation de ce site avec <a href="https://fr.matomo.org/privacy" target="_blank" rel="noopener noreferrer">Matomo</a>, un outil de mesure
       d’audience que nous hébergeons nous-mêmes sur nos propres serveurs.
       Aucune donnée n’est transmise à un tiers.
     </p>
@@ -171,16 +173,19 @@ const optOutUrl = matomoUrl
     <h2>4. Qui a accès à vos données ?</h2>
     <p>
       Vos données sont destinées aux membres de l’association TANDEM habilités à
-      y accéder. Nous faisons appel aux prestataires suivants, qui agissent pour
-      notre compte :
+      y accéder. Le service de conversation Zaq est hébergé et exploité par
+      l’association TANDEM : le stockage de vos conversations est assuré par
+      l’association elle-même, selon les règles décrites dans cette politique.
+      Le modèle de langage qui génère les réponses est lui aussi hébergé par
+      TANDEM : vos questions ne sont envoyées à aucun service d’intelligence
+      artificielle extérieur.
+    </p>
+    <p>
+      Nous faisons appel aux prestataires suivants, qui agissent pour notre
+      compte :
     </p>
     <ul>
       <li>Scaleway SAS (France) : hébergement du site et de la mesure d’audience.</li>
-      <li>
-        Zaq : service de conversation de l’assistant [À COMPLÉTER : société,
-        pays et lieu d’hébergement, éventuels sous-traitants du traitement des
-        questions].
-      </li>
     </ul>
     <p>Nous ne vendons ni ne louons vos données à des tiers.</p>
   </section>
@@ -189,8 +194,8 @@ const optOutUrl = matomoUrl
     <h2>5. Qu’en est-il des cookies ?</h2>
     <p>
       Un cookie est un petit fichier déposé sur votre appareil lors de la visite
-      d’un site. Vous pouvez à tout moment les bloquer ou les supprimer depuis
-      les paramètres de votre navigateur ; l’assistant démarrera alors une
+      d’un site. <strong>Vous pouvez à tout moment les bloquer ou les supprimer depuis
+      les paramètres de votre navigateur</strong>; l’assistant démarrera alors une
       nouvelle conversation, sans historique.
     </p>
     <p>
@@ -211,9 +216,10 @@ const optOutUrl = matomoUrl
       </li>
     </ul>
     <p>
-      Le service de conversation Zaq peut également déposer un cookie technique
-      propre à son domaine, nécessaire à son fonctionnement [À COMPLÉTER : nom
-      et finalité à confirmer avec Zaq].
+      Le service de conversation Zaq, hébergé et exploité par TANDEM, dépose
+      également un cookie technique, <strong>_zaq_key</strong>, propre à son
+      domaine, d’une durée de {cookieMonths} mois et nécessaire au fonctionnement de
+      l’assistant dans l'application Chat Vote.
     </p>
   </section>
 
@@ -232,10 +238,6 @@ const optOutUrl = matomoUrl
         Droit d’opposition et de limitation : vous opposer à un traitement ou en
         demander la limitation.
       </li>
-      <li>
-        Retrait du consentement : à tout moment, sans remettre en cause la
-        licéité du traitement effectué avant ce retrait.
-      </li>
     </ul>
   </section>
 
@@ -252,9 +254,14 @@ const optOutUrl = matomoUrl
           "notre formulaire de contact"
         )
       }
-      ou par courrier à l’adresse suivante : TANDEM, 24 rue Noble, 63450
-      Saint-Saturnin. Nous pourrons vous demander un justificatif d’identité en
-      cas de doute raisonnable.
+      {" "}ou par courrier à l’adresse suivante : TANDEM, 24 rue Noble, 63450
+      Saint-Saturnin.
+    </p>
+    <p>
+      Pour retrouver vos conversations, nous aurons besoin de l’identifiant du
+      cookie « conversationId » stocké sur votre navigateur (visible dans ses
+      paramètres, dans la liste des cookies du site). Il nous permet de vous
+      identifier et de supprimer les conversations qui y sont reliées.
     </p>
     <p>
       Vous pouvez également introduire une réclamation auprès de la CNIL (<a
