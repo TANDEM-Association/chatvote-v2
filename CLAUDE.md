@@ -113,9 +113,9 @@ ZAQ_AUDIENCE=zaq-web-widget
 
 Plan et recette détaillés : `docs/commune-selector-plan.md`.
 
-- `index.astro` est rendue à la demande : `?commune=<INSEE>` absent → Saint-Saturnin ; format invalide → 302 vers `/` ; code inconnu → 404 ; commune connue mais absente de `src/data/availability.ts` → page « non disponible » **sans** script Zaq (ni jeton ni cookie) ; disponible → widget avec `prompt_context`.
+- `index.astro` est rendue à la demande : `?commune=<INSEE>` absent → Saint-Saturnin ; format invalide → 302 vers `/` ; code inconnu → 404 ; commune connue mais dont le statut (`src/data/availability.ts`) n'est pas `available` → page « non disponible » **sans** script Zaq (ni jeton ni cookie), texte selon le statut ; `available` → widget avec `prompt_context`.
 - L'URL est la seule source de vérité : changer de commune = navigation complète (Zaq n'a pas d'API de nouvelle conversation). Pas de `localStorage`.
-- Données statiques : snapshot geo.api.gouv.fr dans `data/communes/` (sha256 vérifié), index généré par `pnpm build:data` (lancé avant `dev`, `build`, `check`). Ajouter une commune disponible = ajouter son code INSEE à `AVAILABLE_COMMUNES`.
+- Données statiques : snapshot geo.api.gouv.fr dans `data/communes/` (sha256 vérifié), index généré par `pnpm build:data` (lancé avant `dev`, `build`, `check`). Statut d'une commune : table `COMMUNE_STATUSES` (`code INSEE → statut`), mise à jour manuelle ; absente de la table = `unfunded`. Statuts : `available` (widget), `unfunded` (non financée), `partially-funded` (en cours de financement), `funded` (financée, en cours d'ajout). Seul `available` est indexable ; les trois autres sont `noindex`. Le fichier est embarqué dans le bundle navigateur (recherche) : aucune donnée financière dedans.
 - Comptes rendus filtrés par la clé `commune` du frontmatter. EPCI préparés (types, `institution`), données à importer plus tard.
 - Le kit de portage `refactor-commune-selector/` a été supprimé (récupérable dans l'historique Git).
 
@@ -167,7 +167,7 @@ src/
   lib/zaq-ids.ts               noms de cookies + validation (partagé, sans import Node)
   lib/conversation-cookie.ts   cookie conversationId « commune:id » (navigateur)
   lib/commune/                 sélecteur : code INSEE, index, recherche, contexte, requête, UI
-  data/availability.ts         communes (et EPCI) disponibles dans ChatVote
+  data/availability.ts         statut des communes (et EPCI disponibles) dans ChatVote
   data/generated/              index des communes généré au build (gitignoré)
   scripts/commune-switcher.ts  popover de recherche (navigateur)
   pages/index.astro            à la demande : chat, page « non disponible » ou 404
