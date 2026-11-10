@@ -1,22 +1,43 @@
-// Communes et institutions ouvertes dans ChatVote.
+// Statut des communes et institutions dans ChatVote.
 //
-// Une commune absente de cette liste affiche la page « pas encore disponible »,
-// sans widget Zaq. Ouvrir une commune = ajouter son code INSEE ici, puis
-// redéployer. Un test vérifie que chaque code existe dans le snapshot.
+// Seul `available` affiche le widget Zaq. Les trois autres statuts affichent
+// la page « pas encore disponible » (sans script Zaq) avec un texte propre.
+// Une commune absente de la table est `unfunded`. Changer le statut d'une
+// commune = modifier son code INSEE ici, puis redéployer. Un test vérifie que
+// chaque code existe dans le snapshot.
+//
+// Ce fichier est embarqué dans le bundle navigateur (recherche) : il est
+// public, n'y mettre aucune donnée financière.
 
-/** Codes INSEE des communes ouvertes. */
-export const AVAILABLE_COMMUNES: readonly string[] = [
-  "63396", // Saint-Saturnin (Puy-de-Dôme)
-];
+export type CommuneStatus =
+  /** Ouverte : widget Zaq. */
+  | "available"
+  /** Non disponible, non financée. */
+  | "unfunded"
+  /** Non disponible, financement partiel. */
+  | "partially-funded"
+  /** Non disponible, financée : l'ajout est en cours. */
+  | "funded";
+
+/** Codes INSEE des communes dont le statut n'est pas `unfunded`. */
+export const COMMUNE_STATUSES: Readonly<Record<string, CommuneStatus>> = {
+  "63396": "available", // Saint-Saturnin (Puy-de-Dôme)
+};
 
 /** Identifiants (SIREN) des institutions ouvertes, ex. des EPCI. Aucune pour l'instant. */
 export const AVAILABLE_INSTITUTIONS: readonly string[] = [];
 
-const availableCommunes = new Set(AVAILABLE_COMMUNES);
 const availableInstitutions = new Set(AVAILABLE_INSTITUTIONS);
 
+export function getCommuneStatus(code: string): CommuneStatus {
+  // Object.hasOwn : « constructor » ou « __proto__ » ne sont pas des statuts.
+  return Object.hasOwn(COMMUNE_STATUSES, code)
+    ? (COMMUNE_STATUSES[code] as CommuneStatus)
+    : "unfunded";
+}
+
 export function isCommuneAvailable(code: string): boolean {
-  return availableCommunes.has(code);
+  return getCommuneStatus(code) === "available";
 }
 
 export function isInstitutionAvailable(siren: string): boolean {

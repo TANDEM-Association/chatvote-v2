@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
-import { isCommuneAvailable } from "../../data/availability";
+import { getCommuneStatus } from "../../data/availability";
 import type { CommuneIndex } from "./communes-index";
 import { buildCommuneIndex, parseSnapshotMeta } from "./communes-snapshot";
 import {
@@ -49,7 +49,9 @@ const FIXTURE: CommuneIndex = {
 };
 
 describe("searchCommunes (index factice)", () => {
-  const entries = prepareSearchIndex(FIXTURE, (code) => code === "63396");
+  const entries = prepareSearchIndex(FIXTURE, (code) =>
+    code === "63396" ? "available" : "unfunded",
+  );
   const names = (query: string) =>
     searchCommunes(entries, query).map((hit) => `${hit.name} ${hit.code}`);
 
@@ -106,7 +108,27 @@ describe("searchCommunes (index factice)", () => {
 
   it("signale les communes disponibles", () => {
     const hits = searchCommunes(entries, "saint saturnin");
-    expect(hits.map((hit) => hit.available)).toEqual([true, false]);
+    expect(hits.map((hit) => hit.status)).toEqual(["available", "unfunded"]);
+  });
+
+  it("trie par statut : disponible, financée, partiellement financée, non financée", () => {
+    const sorted = prepareSearchIndex(
+      FIXTURE,
+      (code) =>
+        (
+          ({
+            "63450": "unfunded",
+            "63002": "partially-funded",
+            "63001": "funded",
+            "63396": "available",
+          }) as const
+        )[code as "63450"] ?? "unfunded",
+    );
+    expect(
+      searchCommunes(sorted, "au")
+        .map((hit) => hit.status)
+        .slice(0, 2),
+    ).toEqual(["funded", "partially-funded"]);
   });
 
   it("traite % _ \\ ( comme du texte, sans erreur", () => {
@@ -127,7 +149,7 @@ describe("searchCommunes (snapshot réel)", () => {
         ),
       ),
     );
-    entries = prepareSearchIndex(index, isCommuneAvailable);
+    entries = prepareSearchIndex(index, getCommuneStatus);
   });
 
   it("limite à 20 résultats", () => {
@@ -140,7 +162,7 @@ describe("searchCommunes (snapshot réel)", () => {
       code: "63396",
       departmentLabel: "Puy-de-Dôme",
       postalCode: "63450",
-      available: true,
+      status: "available",
     });
   });
 

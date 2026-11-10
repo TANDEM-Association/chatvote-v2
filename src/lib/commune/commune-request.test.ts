@@ -27,7 +27,7 @@ const AJACCIO: Commune = {
 const deps: CommuneRequestDeps = {
   find: (code) =>
     [SAINT_SATURNIN, AJACCIO].find((commune) => commune.code === code),
-  isAvailable: (code) => code === "63396",
+  getStatus: (code) => (code === "63396" ? "available" : "unfunded"),
 };
 
 describe("resolveCommuneRequest", () => {
@@ -51,8 +51,18 @@ describe("resolveCommuneRequest", () => {
     expect(resolveCommuneRequest("2A004", deps)).toEqual({
       kind: "unavailable",
       commune: AJACCIO,
+      status: "unfunded",
     });
   });
+
+  it.each(["unfunded", "partially-funded", "funded"] as const)(
+    "transmet le statut %s sans widget",
+    (status) => {
+      expect(
+        resolveCommuneRequest("2A004", { ...deps, getStatus: () => status }),
+      ).toEqual({ kind: "unavailable", commune: AJACCIO, status });
+    },
+  );
 
   it("renvoie not-found pour un code bien formé mais inconnu", () => {
     expect(resolveCommuneRequest("99999", deps)).toEqual({ kind: "not-found" });
@@ -82,7 +92,7 @@ describe("resolveCommuneRequest", () => {
         calls.push(code);
         return undefined;
       },
-      isAvailable: () => false,
+      getStatus: () => "unfunded",
     });
     expect(calls).toEqual([]);
   });

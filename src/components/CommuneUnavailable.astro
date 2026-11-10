@@ -5,23 +5,39 @@
 //
 
 interface Props {
-  variant: "unavailable" | "not-found";
+  variant: "unfunded" | "partially-funded" | "funded" | "not-found";
   communeName?: string;
 }
 
 const { variant, communeName } = Astro.props;
 const donateUrl = import.meta.env.PUBLIC_DONATE_URL;
 
-const content =
-  variant === "unavailable"
-    ? {
-        title: `${communeName} n'est pas encore disponible dans ChatVote`,
-        text: "Ouvrir une commune nous coûte 250€. Votre soutien nous aide à accueillir la vôtre plus vite.",
-      }
-    : {
-        title: "Cette commune est introuvable",
-        text: "Le code de commune demandé ne correspond à aucune commune française.",
-      };
+const notYetAvailable = `${communeName} n'est pas encore disponible dans ChatVote`;
+
+const contents = {
+  unfunded: {
+    title: notYetAvailable,
+    text: "Ouvrir une commune nous coûte 250€. Votre soutien nous aide à accueillir la vôtre plus vite.",
+    cta: "Ouvrir cette commune",
+  },
+  "partially-funded": {
+    title: notYetAvailable,
+    text: "Ouvrir une commune nous coûte 250€. Une partie seulement a déjà été financée, votre financement complémentaire permettrait de l'accueillir au plus vite.",
+    cta: "Ouvrir cette commune",
+  },
+  funded: {
+    title: `${communeName} arrive bientôt dans ChatVote`,
+    text: "Les 250€ nécessaires pour nous permettre d'accueillir cette commune ont été financés, nous travaillons à l'accueillir au plus vite. Mais vous pouvez nous soutenir ou financer une autre commune.",
+    cta: "Soutenir Tandem",
+  },
+  "not-found": {
+    title: "Cette commune est introuvable",
+    text: "Le code de commune demandé ne correspond à aucune commune française.",
+    cta: null,
+  },
+} as const;
+
+const content = contents[variant];
 ---
 
 <div class="stage" data-chat-frame>
@@ -37,14 +53,14 @@ const content =
     <p class="text">{content.text}</p>
     <div class="actions">
       {
-        variant === "unavailable" && donateUrl && (
+        content.cta && donateUrl && (
           <a
             class="button"
             href={donateUrl}
             target="_blank"
             rel="noopener noreferrer"
           >
-            Ouvrir cette commune
+            {content.cta}
             <span class="sr-only"> (s'ouvre dans un nouvel onglet)</span>
           </a>
         )

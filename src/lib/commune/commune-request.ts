@@ -2,6 +2,7 @@
 // la recherche de la commune et la disponibilité sont injectées (testable sans
 // snapshot ni rendu).
 
+import type { CommuneStatus } from "../../data/availability";
 import { isValidCommuneCode } from "./commune-code";
 import type { Commune } from "./communes-index";
 import { buildPromptContext } from "./prompt-context";
@@ -11,7 +12,7 @@ export const DEFAULT_COMMUNE_CODE = "63396";
 
 export interface CommuneRequestDeps {
   find(code: string): Commune | undefined;
-  isAvailable(code: string): boolean;
+  getStatus(code: string): CommuneStatus;
 }
 
 export type CommuneRequest =
@@ -19,8 +20,12 @@ export type CommuneRequest =
   | { kind: "redirect"; location: "/" }
   /** Format valide mais code inconnu : 404. */
   | { kind: "not-found" }
-  /** Commune connue mais pas ouverte : page dédiée, sans widget Zaq. */
-  | { kind: "unavailable"; commune: Commune }
+  /** Commune connue mais pas ouverte : page dédiée selon le statut, sans widget Zaq. */
+  | {
+      kind: "unavailable";
+      commune: Commune;
+      status: Exclude<CommuneStatus, "available">;
+    }
   /** Commune ouverte : le chat, avec ce `prompt_context`. */
   | { kind: "available"; commune: Commune; promptContext: string };
 
@@ -36,8 +41,9 @@ export function resolveCommuneRequest(
   if (!commune) {
     return { kind: "not-found" };
   }
-  if (!deps.isAvailable(code)) {
-    return { kind: "unavailable", commune };
+  const status = deps.getStatus(code);
+  if (status !== "available") {
+    return { kind: "unavailable", commune, status };
   }
   return {
     kind: "available",
