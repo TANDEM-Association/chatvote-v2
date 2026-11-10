@@ -1,0 +1,259 @@
+---
+// Page statique (prérendue). Structure reprise de la politique de confidentialité du
+// site Tandem, adaptée à ChatVote. Les passages « À COMPLÉTER » dépendent de Zaq
+// et sont à renseigner avant publication.
+import LegalPage from "../components/LegalPage.astro";
+
+const tandemHref = (import.meta.env.PUBLIC_LOGO_TANDEM_HREF ?? "").replace(
+  /\/$/,
+  "",
+);
+const contactHref = tandemHref ? `${tandemHref}/contact` : "";
+
+// Durée des cookies userID et conversationId, en mois (même variable que le code des cookies).
+const cookieMaxAge = Number(
+  import.meta.env.PUBLIC_USER_ID_COOKIE_MAX_AGE ?? 31536000,
+);
+const cookieMonths = Math.max(1, Math.round(cookieMaxAge / (30 * 24 * 3600)));
+
+// Instance Matomo (module d'opposition) ; vide = mesure d'audience désactivée.
+const matomoUrl = (import.meta.env.PUBLIC_MATOMO_URL ?? "")
+  .trim()
+  .replace(/\/+$/, "");
+const optOutUrl = matomoUrl
+  ? `${matomoUrl}/index.php?module=CoreAdminHome&action=optOut&language=fr`
+  : "";
+---
+
+<LegalPage
+  title="Politique de confidentialité - ChatVote"
+  description="Politique de confidentialité de l'application ChatVote : données traitées, cookies, mesure d'audience, destinataires et exercice de vos droits."
+  heading="Politique de confidentialité"
+>
+  <Fragment slot="intro">
+    <p class="version">Version du 10 novembre 2026</p>
+    <p class="intro">
+      L’association TANDEM collecte et traite certaines données personnelles
+      lorsque vous utilisez l’application ChatVote. Cette politique explique
+      lesquelles, pourquoi, et comment exercer vos droits, conformément au
+      Règlement général sur la protection des données (RGPD) 2016/679 du 27
+      avril 2016 et à la loi n° 78-17 du 6 janvier 1978 relative à
+      l’informatique, aux fichiers et aux libertés.
+    </p>
+  </Fragment>
+
+  <section class="block">
+    <h2>1. Qui est le responsable du traitement ?</h2>
+    <p>
+      Le responsable du traitement est l’association TANDEM, association
+      déclarée (loi du 1er juillet 1901), dont le siège est situé au 24 rue
+      Noble, 63450 Saint-Saturnin (SIREN 993 612 613). Les coordonnées
+      complètes figurent dans nos <a href="/mentions-legales">mentions légales</a>.
+    </p>
+  </section>
+
+  <section class="block">
+    <h2>2. Quelles données collectons-nous ?</h2>
+
+    <h3>Conversations avec l’assistant</h3>
+    <p>
+      L’assistant de ChatVote est fourni par la solution Zaq, intégrée à la page.
+      Lorsque vous l’utilisez, les données suivantes sont traitées :
+    </p>
+    <ul>
+      <li>
+        les questions que vous posez et les réponses de l’assistant, ainsi que
+        l’historique de vos conversations ;
+      </li>
+      <li>la commune que vous avez choisie, transmise à l’assistant pour contextualiser ses réponses ;</li>
+      <li>
+        un identifiant technique aléatoire, qui permet de vous retrouver d’une
+        visite à l’autre et d’afficher votre historique : il ne contient aucune
+        information sur vous ;
+      </li>
+      <li>votre adresse IP, que reçoit inévitablement le service de conversation.</li>
+    </ul>
+    <p>
+      Utilisation : répondre à vos questions et conserver votre historique de
+      conversation.
+    </p>
+    <p>
+      Base légale : [À COMPLÉTER : à valider avec la personne en charge du
+      juridique].
+    </p>
+    <p>
+      Durée de conservation : l’identifiant technique est conservé {cookieMonths} mois
+      sur votre appareil. Les conversations sont conservées [À COMPLÉTER :
+      durée côté Zaq].
+    </p>
+    <p>
+      Merci de ne pas saisir de données personnelles vous concernant ou
+      concernant d’autres personnes (nom, coordonnées, opinions, etc.) dans vos
+      questions : l’assistant n’en a pas besoin pour vous répondre.
+    </p>
+
+    <h3>Choix de la commune</h3>
+    <p>
+      La recherche d’une commune s’effectue dans votre navigateur, à partir
+      d’une liste publique des communes intégrée à l’application : aucune donnée
+      vous concernant n’est transmise lors de la recherche. La commune choisie
+      apparaît dans l’adresse de la page.
+    </p>
+  </section>
+
+  <section class="block">
+    <h2>3. Mesure d’audience</h2>
+    <p>
+      Nous mesurons la fréquentation de ce site avec Matomo, un outil de mesure
+      d’audience que nous hébergeons nous-mêmes sur nos propres serveurs.
+      Aucune donnée n’est transmise à un tiers.
+    </p>
+    <p>
+      <strong>Finalité.</strong> Cette mesure sert uniquement à connaître la
+      fréquentation du site (pages consultées, provenance du trafic) afin de
+      l’améliorer. Elle ne sert ni à de la publicité, ni au suivi d’un visiteur
+      d’un site à l’autre.
+    </p>
+    <p>
+      <strong>Données collectées.</strong> Adresse IP anonymisée, pages consultées,
+      date et heure de la visite, type d’appareil, navigateur et système d’exploitation,
+      site ou moteur de recherche d’origine.
+    </p>
+    <p>
+      <strong>Cookies.</strong> Notre configuration de Matomo ne dépose aucun cookie
+      et ne lit aucune information sur votre terminal.
+    </p>
+    <p>
+      <strong>Base légale.</strong> Intérêt légitime de l’éditeur à connaître l’audience
+      de son site. Ce traitement strictement limité à la mesure d’audience est exempté
+      de recueil du consentement selon les lignes directrices de la CNIL.
+    </p>
+    <p>
+      <strong>Durée de conservation.</strong> Les données de visite sont conservées
+      au maximum 25 mois, puis supprimées ou agrégées de manière anonyme.
+    </p>
+    <p>
+      <strong>Votre droit de vous opposer.</strong> Vous pouvez refuser d’être pris
+      en compte dans la mesure d’audience. Nous respectons également le paramètre
+      « Do Not Track » de votre navigateur.{
+        optOutUrl && " Vous pouvez aussi utiliser le module ci-dessous :"
+      }
+    </p>
+    {
+      optOutUrl && (
+        <iframe
+          class="optout"
+          src={optOutUrl}
+          title="Désactiver la mesure d'audience"
+        />
+      )
+    }
+  </section>
+
+  <section class="block">
+    <h2>4. Qui a accès à vos données ?</h2>
+    <p>
+      Vos données sont destinées aux membres de l’association TANDEM habilités à
+      y accéder. Nous faisons appel aux prestataires suivants, qui agissent pour
+      notre compte :
+    </p>
+    <ul>
+      <li>Scaleway SAS (France) : hébergement du site et de la mesure d’audience.</li>
+      <li>
+        Zaq : service de conversation de l’assistant [À COMPLÉTER : société,
+        pays et lieu d’hébergement, éventuels sous-traitants du traitement des
+        questions].
+      </li>
+    </ul>
+    <p>Nous ne vendons ni ne louons vos données à des tiers.</p>
+  </section>
+
+  <section class="block">
+    <h2>5. Qu’en est-il des cookies ?</h2>
+    <p>
+      Un cookie est un petit fichier déposé sur votre appareil lors de la visite
+      d’un site. Vous pouvez à tout moment les bloquer ou les supprimer depuis
+      les paramètres de votre navigateur ; l’assistant démarrera alors une
+      nouvelle conversation, sans historique.
+    </p>
+    <p>
+      ChatVote ne dépose aucun cookie de suivi, de mesure d’audience ou de
+      publicité. Deux cookies techniques sont déposés par le site, d’une durée
+      de {cookieMonths} mois, uniquement pour fournir le service que vous
+      utilisez :
+    </p>
+    <ul>
+      <li>
+        <strong>userID</strong> : identifiant aléatoire qui permet de vous reconnaître
+        d’une visite à l’autre pour retrouver votre historique de conversation.
+        Il n’est pas lisible par les scripts de la page.
+      </li>
+      <li>
+        <strong>conversationId</strong> : mémorise votre dernière conversation pour
+        chaque commune, afin de la reprendre.
+      </li>
+    </ul>
+    <p>
+      Le service de conversation Zaq peut également déposer un cookie technique
+      propre à son domaine, nécessaire à son fonctionnement [À COMPLÉTER : nom
+      et finalité à confirmer avec Zaq].
+    </p>
+  </section>
+
+  <section class="block">
+    <h2>6. Quels sont vos droits relatifs aux données collectées ?</h2>
+    <p>Vous disposez des droits suivants sur vos données :</p>
+    <ul>
+      <li>Droit d’accès : obtenir une copie des données vous concernant.</li>
+      <li>Droit de rectification : faire corriger des données inexactes ou incomplètes.</li>
+      <li>Droit à l’effacement : demander la suppression de vos données.</li>
+      <li>
+        Droit à la portabilité : recevoir vos données dans un format structuré
+        et couramment utilisé.
+      </li>
+      <li>
+        Droit d’opposition et de limitation : vous opposer à un traitement ou en
+        demander la limitation.
+      </li>
+      <li>
+        Retrait du consentement : à tout moment, sans remettre en cause la
+        licéité du traitement effectué avant ce retrait.
+      </li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>7. Comment exercer vos droits ?</h2>
+    <p>
+      Pour exercer vos droits, vous pouvez nous contacter via{" "}
+      {
+        contactHref ? (
+          <a href={contactHref} target="_blank" rel="noopener noreferrer">
+            notre formulaire de contact
+          </a>
+        ) : (
+          "notre formulaire de contact"
+        )
+      }
+      ou par courrier à l’adresse suivante : TANDEM, 24 rue Noble, 63450
+      Saint-Saturnin. Nous pourrons vous demander un justificatif d’identité en
+      cas de doute raisonnable.
+    </p>
+    <p>
+      Vous pouvez également introduire une réclamation auprès de la CNIL (<a
+        href="https://www.cnil.fr"
+        target="_blank"
+        rel="noopener noreferrer">www.cnil.fr</a
+      >).
+    </p>
+  </section>
+</LegalPage>
+
+<style>
+  .optout {
+    width: 100%;
+    max-width: 600px;
+    height: 200px;
+    border: 0;
+  }
+</style>

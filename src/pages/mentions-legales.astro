@@ -1,227 +1,110 @@
 ---
-// Page statique (prérendue). Contenu et styles repris des mentions légales du site Tandem.
-import BaseLayout from "../layouts/BaseLayout.astro";
+// Page statique (prérendue). Contenu repris des mentions légales du site Tandem.
+import LegalPage from "../components/LegalPage.astro";
 
 const tandemHref = (import.meta.env.PUBLIC_LOGO_TANDEM_HREF ?? "").replace(
   /\/$/,
   "",
 );
 const contactHref = tandemHref ? `${tandemHref}/contact` : "";
-const privacyHref = tandemHref
-  ? `${tandemHref}/politique-de-confidentialite`
-  : "";
 ---
 
-<BaseLayout
+<LegalPage
   title="Mentions légales - ChatVote"
   description="Mentions légales de l'application ChatVote : éditeur, hébergeur, propriété intellectuelle, responsabilité et données personnelles."
+  heading="Mentions légales"
 >
-  <section class="page" aria-labelledby="legal-title">
-    <div class="container">
-      <div class="header">
-        <p class="eyebrow">Légal</p>
-        <h1 id="legal-title">Mentions légales</h1>
-      </div>
 
-      <section class="block">
-        <h2>Éditeur</h2>
-        <p>
-          <strong>TANDEM</strong><br />
-          Association déclarée (loi du 1er juillet 1901)<br />
-          24 rue Noble<br />
-          63450 Saint-Saturnin<br />
-          France
-        </p>
-        <p>
-          Contact : Contactez-nous via notre{" "}
-          {
-            contactHref ? (
-              <a href={contactHref} target="_blank" rel="noopener noreferrer">
-                formulaire de contact
-              </a>
-            ) : (
-              "formulaire de contact"
-            )
-          }<br />
-          Numéro SIREN : 993 612 613<br />
-          Numéro SIRET : 993 612 613 00014<br />
-          Numéro RNA : W632015452<br />
-          Responsable de la publication : Stanislas Vandier, Président
-        </p>
-      </section>
-
-      <section class="block">
-        <h2>Hébergeur</h2>
-        <p>
-          <strong>Scaleway SAS</strong><br />
-          Société par actions simplifiée au capital de 142 050 €<br />
-          8 rue de la Ville-l’Évêque<br />
-          75008 Paris<br />
-          France
-        </p>
-        <p>
-          SIREN : 433 115 904 RCS Paris<br />
-          N° de TVA intracommunautaire : FR 35 433115904<br />
-          Site :{" "}
-          <a
-            href="https://www.scaleway.com"
-            target="_blank"
-            rel="noopener noreferrer">www.scaleway.com</a
-          >
-        </p>
-      </section>
-
-      <section class="block">
-        <h2>Propriété intellectuelle</h2>
-        <p>
-          L’ensemble des contenus de l’application Chat Vote (textes, images,
-          logos, graphismes, vidéos, etc.) est la propriété de l’association
-          TANDEM ou de ses partenaires, sauf mention contraire. Toute
-          reproduction, représentation ou diffusion, totale ou partielle, sans
-          autorisation écrite préalable de l’association est interdite.
-        </p>
-      </section>
-
-      <section class="block">
-        <h2>Responsabilité</h2>
-        <p>
-          L’association TANDEM s’efforce de fournir des informations exactes et
-          à jour, mais ne peut garantir l’exhaustivité ni l’absence d’erreurs.
-          Elle ne saurait être tenue responsable des contenus de sites tiers
-          vers lesquels l’application Chat Vote pourrait renvoyer.
-        </p>
-      </section>
-
-      <section class="block">
-        <h2>Données personnelles</h2>
-        <p>
-          Le traitement de vos données à caractère personnel est régi par notre{" "}
-          {
-            privacyHref ? (
-              <a href={privacyHref} target="_blank" rel="noopener noreferrer">
-                Politique de confidentialité
-              </a>
-            ) : (
-              "Politique de confidentialité"
-            )
-          }, conformément au Règlement général sur la protection des données
-          (RGPD) 2016/679 du 27 avril 2016 et à la loi Informatique et
-          Libertés.
-        </p>
-        <p>
-          Pour toute question concernant vos données personnelles, vous pouvez
-          nous contacter à l’adresse suivante : 24 rue Noble, 63450
-          Saint-Saturnin, ou via{" "}
-          {
-            contactHref ? (
-              <a href={contactHref} target="_blank" rel="noopener noreferrer">
-                notre formulaire de contact
-              </a>
-            ) : (
-              "notre formulaire de contact"
-            )
-          }.
-        </p>
-      </section>
-    </div>
+  <section class="block">
+    <h2>Éditeur</h2>
+    <p>
+      <strong>TANDEM</strong><br />
+      Association déclarée (loi du 1er juillet 1901)<br />
+      24 rue Noble<br />
+      63450 Saint-Saturnin<br />
+      France
+    </p>
+    <p>
+      Contact : Contactez-nous via notre{" "}
+      {
+        contactHref ? (
+          <a href={contactHref} target="_blank" rel="noopener noreferrer">
+            formulaire de contact
+          </a>
+        ) : (
+          "formulaire de contact"
+        )
+      }<br />
+      Numéro SIREN : 993 612 613<br />
+      Numéro SIRET : 993 612 613 00014<br />
+      Numéro RNA : W632015452<br />
+      Responsable de la publication : Stanislas Vandier, Président
+    </p>
   </section>
-</BaseLayout>
 
-<style>
-  /* Fond clair comme tndm.fr ; valeurs reprises de la page Tandem (mobile-first). */
-  .page {
-    --surface-100: #fbfbfb;
-    --ink: #170742;
-    --ink-secondary: #170742a6;
-    --border: #1707421f;
-    --focus-ring: var(--brand-indigo);
-    --page-gutter: 1.5rem;
-    flex: 1;
-    padding: 3rem 0;
-    background: var(--surface-100);
-    color: var(--ink);
-  }
+  <section class="block">
+    <h2>Hébergeur</h2>
+    <p>
+      <strong>Scaleway SAS</strong><br />
+      Société par actions simplifiée au capital de 142 050 €<br />
+      8 rue de la Ville-l’Évêque<br />
+      75008 Paris<br />
+      France
+    </p>
+    <p>
+      SIREN : 433 115 904 RCS Paris<br />
+      N° de TVA intracommunautaire : FR 35 433115904<br />
+      Site :{" "}
+      <a
+        href="https://www.scaleway.com"
+        target="_blank"
+        rel="noopener noreferrer">www.scaleway.com</a
+      >
+    </p>
+  </section>
 
-  .container {
-    display: flex;
-    flex-direction: column;
-    gap: 3rem;
-    width: 100%;
-    max-width: calc(45rem + 2 * var(--page-gutter));
-    margin: 0 auto;
-    padding: 0 var(--page-gutter);
-  }
+  <section class="block">
+    <h2>Propriété intellectuelle</h2>
+    <p>
+      L’ensemble des contenus de l’application Chat Vote (textes, images,
+      logos, graphismes, vidéos, etc.) est la propriété de l’association
+      TANDEM ou de ses partenaires, sauf mention contraire. Toute
+      reproduction, représentation ou diffusion, totale ou partielle, sans
+      autorisation écrite préalable de l’association est interdite.
+    </p>
+  </section>
 
-  .header {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
+  <section class="block">
+    <h2>Responsabilité</h2>
+    <p>
+      L’association TANDEM s’efforce de fournir des informations exactes et
+      à jour, mais ne peut garantir l’exhaustivité ni l’absence d’erreurs.
+      Elle ne saurait être tenue responsable des contenus de sites tiers
+      vers lesquels l’application Chat Vote pourrait renvoyer.
+    </p>
+  </section>
 
-  .eyebrow {
-    color: var(--ink-secondary);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    line-height: 1.4;
-    text-transform: uppercase;
-  }
-
-  h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    line-height: 2.125rem;
-  }
-
-  .block {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
-  }
-
-  h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    line-height: 1.625rem;
-  }
-
-  .block p {
-    max-width: 70ch;
-  }
-
-  a {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  @media (min-width: 768px) {
-    .page {
-      --page-gutter: 3rem;
-      padding: 4rem 0;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      line-height: 2.875rem;
-    }
-
-    h2 {
-      font-size: 1.75rem;
-      font-weight: 600;
-      line-height: 2.125rem;
-    }
-
-    .eyebrow {
-      font-size: 0.8125rem;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .page {
-      --page-gutter: 6rem;
-      padding: 6rem 0;
-    }
-  }
-</style>
+  <section class="block">
+    <h2>Données personnelles</h2>
+    <p>
+      Le traitement de vos données à caractère personnel est régi par notre{" "}
+      <a href="/politique-de-confidentialite">Politique de confidentialité</a>, conformément au Règlement général sur la protection des données
+      (RGPD) 2016/679 du 27 avril 2016 et à la loi Informatique et
+      Libertés.
+    </p>
+    <p>
+      Pour toute question concernant vos données personnelles, vous pouvez
+      nous contacter à l’adresse suivante : 24 rue Noble, 63450
+      Saint-Saturnin, ou via{" "}
+      {
+        contactHref ? (
+          <a href={contactHref} target="_blank" rel="noopener noreferrer">
+            notre formulaire de contact
+          </a>
+        ) : (
+          "notre formulaire de contact"
+        )
+      }.
+    </p>
+  </section>
+</LegalPage>
