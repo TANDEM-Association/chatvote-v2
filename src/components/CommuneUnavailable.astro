@@ -7,12 +7,17 @@
 interface Props {
   variant: "unfunded" | "partially-funded" | "funded" | "not-found";
   communeName?: string;
+  /** Premier code postal de la commune, `undefined` s'il n'y en a aucun. */
+  communePostalCode?: string | undefined;
 }
 
-const { variant, communeName } = Astro.props;
+const { variant, communeName, communePostalCode } = Astro.props;
+const communeLabel = communePostalCode
+  ? `${communeName} (${communePostalCode})`
+  : communeName;
 const donateUrl = import.meta.env.PUBLIC_DONATE_URL;
 
-const notYetAvailable = `${communeName} n'est pas encore disponible dans ChatVote`;
+const notYetAvailable = `${communeLabel} n'est pas encore disponible dans ChatVote`;
 
 const contents = {
   unfunded: {
@@ -26,7 +31,7 @@ const contents = {
     cta: "Ouvrir cette commune",
   },
   funded: {
-    title: `${communeName} arrive bientôt dans ChatVote`,
+    title: `${communeLabel} arrive bientôt dans ChatVote`,
     text: "Les 250€ nécessaires pour nous permettre d'accueillir cette commune ont été financés, nous travaillons à l'accueillir au plus vite. Mais vous pouvez nous soutenir ou financer une autre commune.",
     cta: "Soutenir Tandem",
   },

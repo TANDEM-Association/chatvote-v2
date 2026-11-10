@@ -53,6 +53,7 @@ const title =
       <CommuneUnavailable
         variant={request.status}
         communeName={request.commune.name}
+        communePostalCode={request.commune.postalCodes[0]}
       />
     ) : (
       <CommuneUnavailable variant="not-found" />
