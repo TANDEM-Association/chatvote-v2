@@ -71,17 +71,15 @@ La page `/politique-de-confidentialite` existe (`src/pages/politique-de-confiden
 
 À faire avant la mise en production :
 
-- **Compléter les quatre « [À COMPLÉTER] »** du texte (à chercher dans la page), qui dépendent de Zaq et du juridique :
-  1. base légale du traitement des conversations ;
-  2. durée de conservation des conversations côté Zaq ;
-  3. identité de Zaq (société, pays, hébergement, sous-traitants éventuels du traitement des questions) ;
-  4. nom et finalité du cookie `_zaq_key` posé par Zaq.
-- **Faire confirmer par Zaq** que l'adresse IP n'est exploitée ni pour identifier ni pour localiser (l'introduction de la page l'affirme pour Tandem).
+- **Compléter les « [À COMPLÉTER] »** du texte : la durée de conservation des conversations (section 2) et la finalité du cookie `_zaq_key` (section 5). Zaq est hébergé et exploité par Tandem (confirmé par l'équipe Zaq) ; la base légale est rédigée (intérêt légitime, art. 6.1.f), **à valider avec le juridique**, en soulevant les opinions politiques éventuellement saisies dans les questions (données sensibles, art. 9).
+- **Cookie `_zaq_key`** : mentionné dans la page (section 5) ; durée de vie de 12 mois indiquée ; il reste à préciser sa finalité (« [À COMPLÉTER] »), à demander à l'équipe Zaq.
+- **Modèle de langage** : auto-hébergé par Tandem (confirmé), précisé dans la section 4 de la page : aucun sous-traitant d'IA à citer. À remettre en cause si ce choix change.
+- **Faire confirmer par l'équipe Zaq** que l'adresse IP n'est exploitée ni pour identifier ni pour localiser (l'introduction de la page l'affirme).
 - **Ne publier la page que lorsque Matomo est actif** : la section « Mesure d'audience » s'affiche même si `PUBLIC_MATOMO_URL` est vide (choix assumé, pas de condition dans le code). Déployer la page et le suivi ensemble.
 - **Réglages de confidentialité de l'instance Matomo** faits avant la mise en ligne (anonymisation de l'IP, Do Not Track, rétention 25 mois) : le texte juridique les suppose en place.
 - Si Matomo est configuré avec une géolocalisation par IP, le mentionner dans « Données collectées » (l'introduction affirme que la localisation n'est pas collectée).
 - Date de version (« Version du … ») à ajuster à la publication.
-- Droit d'accès : le `userID` est HttpOnly, donc illisible par le visiteur. Prévoir avec Zaq comment retrouver les données d'une personne qui exerce ses droits.
+- Droit d'accès : le `userID` est HttpOnly (illisible), donc la page demande au visiteur son `conversationId` (cookie lisible, de la forme `<codeCommune>:<id>` : seule la partie après les deux-points est l'identifiant Zaq). À confirmer avec l'équipe Zaq : retrouver et supprimer, à partir d'un `conversation_id`, toutes les conversations du même utilisateur.
 
 ## Reste à faire plus tard (hors migration)
 
