@@ -2,13 +2,25 @@
 const year = new Date().getFullYear();
 ---
 
+<p class="disclaimer">Les réponses sont générées par une IA et peuvent contenir des erreurs ou des inexactitudes. Pensez à vérifier les informations importantes avant de vous y fier.</p>
 <footer class="footer">
-  <p>© {year} TANDEM — Tech &amp; Démocratie</p>
-  <p class="beta">Version 1.1 BETA en cours de développement</p>
+  <p>©{year} TANDEM — Tech &amp; Démocratie</p>
+  <p class="beta">Version 1.2 BETA en cours de développement</p>
   <p>Association loi 1901 · Saint-Saturnin · <a href="/mentions-legales">Mentions légales</a> · <a href="/politique-de-confidentialite">Confidentialité</a></p>
 </footer>
 
 <style>
+  .disclaimer {
+    margin: 0;
+    padding: var(--space-1) var(--gutter);
+    background: var(--ink);
+    color: var(--surface-100);
+    text-align: center;
+    font-size: var(--body-sm-size);
+    line-height: var(--body-sm-line);
+    
+  }
+
   .footer {
     display: flex;
     flex-direction: column;
@@ -21,14 +33,13 @@ const year = new Date().getFullYear();
     color: var(--ink-secondary);
     font-size: var(--body-sm-size);
     line-height: var(--body-sm-line);
-   
+
     .beta {
-    color: var(--ink);
-    font-style: italic;
-  }
+      color: var(--ink);
+      font-style: italic;
+    }
   }
 
-  
   @media (min-width: 640px) {
     .footer {
       flex-direction: row;
