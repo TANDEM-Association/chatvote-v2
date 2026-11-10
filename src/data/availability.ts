@@ -22,6 +22,18 @@ export type CommuneStatus =
 /** Codes INSEE des communes dont le statut n'est pas `unfunded`. */
 export const COMMUNE_STATUSES: Readonly<Record<string, CommuneStatus>> = {
   "63396": "available", // Saint-Saturnin (Puy-de-Dôme)
+
+  // Financées (250 € payés), en cours d'ajout
+  "71309": "funded", // Montcenis (Saône-et-Loire)
+  "85163": "funded", // Noirmoutier-en-l'Île (Vendée)
+  "22353": "funded", // Trégastel (Côtes-d'Armor)
+
+  // Validées, financement en cours
+  "58140": "partially-funded", // Larochemillay (Nièvre)
+  "85277": "partially-funded", // Saint-Vincent-sur-Graon (Vendée)
+  "83126": "partially-funded", // La Seyne-sur-Mer (Var)
+  "27681": "partially-funded", // Vernon (Eure)
+  "83009": "partially-funded", // Bandol (Var)
 };
 
 /** Identifiants (SIREN) des institutions ouvertes, ex. des EPCI. Aucune pour l'instant. */
