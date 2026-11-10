@@ -49,5 +49,8 @@ const { title, description, noindex = false, commune } = Astro.props;
     </main>
     <Footer />
     <CommunePopover currentCode={commune?.code} />
+    <script>
+      import "../scripts/matomo";
+    </script>
   </body>
 </html>

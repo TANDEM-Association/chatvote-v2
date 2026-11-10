@@ -38,6 +38,15 @@ describe("vercel.json", () => {
     },
   );
 
+  it("autorise l'origine Matomo de .env.example, si elle est définie", () => {
+    const raw = /^PUBLIC_MATOMO_URL=(.*)$/m.exec(read("../.env.example"))?.[1];
+    if (!raw?.trim()) return;
+    const origin = new URL(raw.trim()).origin;
+    expect(csp).toContain(`script-src 'self' ${zaqOrigin} ${origin};`);
+    expect(csp).toMatch(new RegExp(`connect-src [^;]*${origin}`));
+    expect(csp).toMatch(new RegExp(`img-src [^;]*${origin}`));
+  });
+
   it("n'utilise ni unsafe-inline, ni unsafe-eval, ni joker", () => {
     expect(csp).not.toMatch(/unsafe-|\*/);
   });
