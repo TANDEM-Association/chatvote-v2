@@ -6,7 +6,12 @@ const year = new Date().getFullYear();
 <footer class="footer">
   <p>©{year} TANDEM — Tech &amp; Démocratie</p>
   <p class="beta">Version 1.2 BETA en cours de développement</p>
-  <p>Association loi 1901 · Saint-Saturnin · <a href="/mentions-legales">Mentions légales</a> · <a href="/politique-de-confidentialite">Confidentialité</a></p>
+  <nav aria-label="Liens légaux">
+    <ul class="legal">
+      <li><a href="/mentions-legales">Mentions légales</a></li>
+      <li><a href="/politique-de-confidentialite">Confidentialité</a></li>
+    </ul>
+  </nav>
 </footer>
 
 <style>
@@ -18,7 +23,7 @@ const year = new Date().getFullYear();
     text-align: center;
     font-size: var(--body-sm-size);
     line-height: var(--body-sm-line);
-    
+
   }
 
   .footer {
@@ -38,6 +43,16 @@ const year = new Date().getFullYear();
       color: var(--ink);
       font-style: italic;
     }
+  }
+
+  .legal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-1) var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
   @media (min-width: 640px) {
