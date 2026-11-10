@@ -9,7 +9,7 @@ Documents liés :
 
 ## 1. Objectif
 
-Permettre au visiteur de choisir sa commune. Une commune **disponible** affiche le chat Zaq avec le nom et le code postal de la commune comme contexte. Une commune **non disponible** affiche une page personnalisée, **sans** le widget Zaq. Les EPCI (communautés de communes, agglomérations, etc.) doivent pouvoir être ajoutés plus tard avec la même logique.
+Permettre au visiteur de choisir sa commune. Une commune **disponible** affiche le chat Zaq avec le nom et le code postal de la commune comme contexte. Une commune **non disponible** affiche une page personnalisée, **sans** le widget Zaq, dont le texte dépend de son statut de financement (voir ci-dessous). Les EPCI (communautés de communes, agglomérations, etc.) doivent pouvoir être ajoutés plus tard avec la même logique.
 
 Aujourd'hui seule Saint-Saturnin est disponible. Entre 5 et 10 autres communes sont attendues prochainement.
 
@@ -40,7 +40,7 @@ Aujourd'hui seule Saint-Saturnin est disponible. Entre 5 et 10 autres communes s
 | `/` (sans paramètre) | Saint-Saturnin |
 | `/?commune=abc` (format invalide) | Redirection vers `/` |
 | `/?commune=99999` (format valide, inconnu) | 404 |
-| Commune connue, **non disponible** | Page dédiée, **aucun** script Zaq, donc ni appel au jeton ni cookie |
+| Commune connue, **non disponible** (`unfunded`, `partially-funded`, `funded`) | Page dédiée selon le statut, **aucun** script Zaq, donc ni appel au jeton ni cookie |
 | Commune connue, **disponible** | Chat Zaq avec `prompt_context` de la commune |
 
 Format du code : `^(\d{5}|2[AB]\d{3})$`, validé avant toute recherche.
@@ -50,15 +50,22 @@ Format du code : `^(\d{5}|2[AB]\d{3})$`, validé avant toute recherche.
 - **Snapshot** : `communes-all.json.gz`, 34 969 communes (geo.api.gouv.fr, récupéré le 2026-09-30), avec `communes-all.meta.json` (sha256 `0629c040f137202362ccb2dd529383ddb768bc3a1e8433d70e2293cc04ed9d4f`). Le script de build **vérifie le sha256 et s'arrête avec un message clair** si le fichier est absent ou altéré. Pas de liste de secours.
 - **Index de recherche** : généré au build (code, nom, département, codes postaux, population). Chargé par le navigateur au premier focus du champ. Même origine, donc la CSP actuelle (`connect-src 'self'`) suffit. Réglage du cache à prévoir dans `vercel.json`.
 - **Serveur** : lit les mêmes données pour retrouver le nom et le code postal d'une commune.
-- **Disponibilité** : `src/data/availability.ts` liste les codes INSEE des communes ouvertes et les identifiants des institutions ouvertes (vide pour l'instant). Ouvrir une commune = un commit et un redéploiement. Un test vérifie que chaque code existe dans l'index.
+- **Statut** : `src/data/availability.ts` contient la table `COMMUNE_STATUSES` (`code INSEE → statut`) et la liste des institutions ouvertes (vide pour l'instant). Changer un statut = un commit et un redéploiement. Une commune absente de la table est `unfunded`. Un test vérifie que chaque code existe dans l'index. Le fichier est public (bundle navigateur) : pas de donnée financière.
+
+  | Statut | Page | Pastille de recherche | Indexation |
+  |---|---|---|---|
+  | `available` | chat Zaq | « Disponible » | oui |
+  | `unfunded` | « {commune} n'est pas encore disponible dans ChatVote », CTA « Ouvrir cette commune » | aucune | `noindex` |
+  | `partially-funded` | même titre ; « Une partie seulement a déjà été financée, votre financement complémentaire permettrait de l'accueillir au plus vite. », CTA « Ouvrir cette commune » | « En cours de financement » | `noindex` |
+  | `funded` | « {commune} arrive bientôt dans ChatVote » ; « Les 250€ nécessaires… ont été financés… », CTA « Soutenir Tandem » | « En cours d'ajout » | `noindex` |
 
 ## 5. Recherche
 
 - 2 à 100 caractères, 20 résultats maximum, une entrée par commune.
 - Par nom, code INSEE (préfixe) ou code postal.
 - Insensible aux accents et à la casse (« saint saturnin » trouve « Saint-Saturnin »).
-- Tri : communes disponibles d'abord, puis population décroissante, puis nom.
-- Résultat : nom, département (omis s'il est identique au nom), code INSEE, premier code postal, pastille « Disponible ».
+- Tri : par statut (`available`, `funded`, `partially-funded`, `unfunded`), puis population décroissante, puis nom.
+- Résultat : nom, département (omis s'il est identique au nom), code INSEE, premier code postal, pastille selon le statut (voir « Statut »).
 - États : « Recherche en cours… », « Aucune commune trouvée pour « … » », bouton « Effacer ».
 - Les résultats sont de vrais liens `<a href="/?commune=…">` : ça marche même si le JS échoue.
 
@@ -124,7 +131,7 @@ Un commit court et atomique par étape.
 - [ ] `/` ouvre Saint-Saturnin.
 - [ ] `?commune=abc` redirige vers `/`, la valeur n'est jamais affichée.
 - [ ] `?commune=99999` renvoie 404.
-- [ ] Commune non disponible : page dédiée, **aucune requête vers Zaq** dans l'onglet Réseau, aucun cookie `userID` ni `conversationId`.
+- [ ] Commune non disponible (tester chacun des trois statuts) : page dédiée, **aucune requête vers Zaq** dans l'onglet Réseau, aucun cookie `userID` ni `conversationId`.
 - [ ] Choisir une commune puis bouton retour : revient à la commune précédente.
 
 **Contexte Zaq** (cas à vérifier avec une commune de chaque type)
