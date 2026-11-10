@@ -113,6 +113,12 @@ const { title, description, heading } = Astro.props;
     max-width: 70ch;
   }
 
+  .page :global(.lead) {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.75rem;
+  }
+
   .page :global(.version) {
     color: var(--ink-secondary);
     font-size: 0.875rem;
