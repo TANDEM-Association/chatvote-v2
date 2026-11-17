@@ -20,12 +20,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@astrojs/vercel": "^11.0.18",
-    "astro": "^7.4.5"
+    "@astrojs/vercel": "^11.0.22",
+    "astro": "^7.4.12"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
-    "@biomejs/biome": "^2.6.5",
+    "@biomejs/biome": "^2.6.8",
     "@types/node": "^24.19.2",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0"
