@@ -1,6 +1,6 @@
 // Valide les PV augmentés d'un dossier et génère l'index de chaque commune.
-// `pnpm pv:index [dossier]` (par défaut pv-data/pv). Exécuté par Node directement
-// (type stripping).
+// `pnpm pv:index <dossier>`, à lancer avant l'envoi vers le stockage. Exécuté par
+// Node directement (type stripping).
 //
 // Organisation attendue (identique au stockage Scaleway) :
 //   <dossier>/<INSEE>/<AAAA-MM-JJ>.md + .pdf  →  <dossier>/<INSEE>/index.json
@@ -20,8 +20,14 @@ import {
   parsePvFrontmatter,
 } from "../src/lib/pv/pv-format.ts";
 
-const root = resolve(import.meta.dirname, "..");
-const dir = resolve(root, process.argv[2] ?? "pv-data/pv");
+const arg = process.argv[2];
+if (!arg) {
+  console.error(
+    "Usage : pnpm pv:index <dossier> (le dossier qui contient <INSEE>/…)",
+  );
+  process.exit(1);
+}
+const dir = resolve(arg);
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
 

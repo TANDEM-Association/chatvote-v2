@@ -1,5 +1,5 @@
-// Lecture des PV augmentés dans le stockage (Scaleway Object Storage, ou
-// `pnpm pv:serve` en local) : simples GET HTTP sur des fichiers publics.
+// Lecture des PV augmentés dans le stockage (Scaleway Object Storage) : simples
+// GET HTTP sur des fichiers publics.
 //   <baseUrl>/<INSEE>/index.json   liste des séances
 //   <baseUrl>/<INSEE>/<id>.md      PV augmenté, converti en HTML ici
 //   <baseUrl>/<INSEE>/<id>.pdf     version PDF, relayée telle quelle
