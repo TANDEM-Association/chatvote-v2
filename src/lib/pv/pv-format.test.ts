@@ -86,13 +86,17 @@ describe("parsePvFrontmatter", () => {
     expect(seance.id).toBe("2025-01-29-2");
   });
 
-  it("signale sans bloquer source_url et skill_version vides", () => {
+  it("signale sans bloquer source_url, source_sha256 et skill_version vides", () => {
     const { seance, warnings } = parsePvFrontmatter(
-      { ...VALID, source_url: "", skill_version: "" },
+      { ...VALID, source_url: "", source_sha256: "", skill_version: "" },
       EXPECTED,
     );
     expect(seance.sourceUrl).toBeNull();
-    expect(warnings).toHaveLength(2);
+    expect(warnings).toHaveLength(3);
+  });
+
+  it("refuse une empreinte mal formée", () => {
+    expect(problemsOf({ ...VALID, source_sha256: "abc" })).toHaveLength(1);
   });
 
   it("refuse un code INSEE vide ou différent du dossier", () => {
