@@ -11,7 +11,7 @@ Recréer ChatVote en version minimale. Le site ne contient que :
 3. le **widget de chat Zaq**, qui remplit l'espace entre le header et le footer (application distincte, autre domaine, intégrée via son script `embed.js`),
 4. un **footer** simple.
 
-Toute la logique métier (IA, données, historique des conversations) vit chez Zaq. Le site ne contient que la logique nécessaire à l'intégration : **deux routes serveur** : l'endpoint qui signe le jeton d'identité du visiteur (voir « Intégration du widget Zaq ») et la page d'accueil, rendue à la demande selon la commune choisie (voir « Sélecteur de commune »).
+Toute la logique métier (IA, données, historique des conversations) vit chez Zaq. Le site ne contient que la logique nécessaire à l'intégration : **trois routes serveur** : l'endpoint qui signe le jeton d'identité du visiteur (voir « Intégration du widget Zaq »), la page d'accueil, rendue à la demande selon la commune choisie (voir « Sélecteur de commune »), et la route qui sert les PV augmentés depuis leur stockage (voir « PV augmentés »).
 
 Référence historique : `https://app.chatvote.org/chat?municipality_code=63396` (ancienne version, Next.js).
 Commune par défaut : **Saint-Saturnin (INSEE 63396)**. La commune se choisit via `?commune=<INSEE>` (voir « Sélecteur de commune »).
@@ -22,7 +22,8 @@ Historique : une première version intégrait le chat via notre propre iframe (c
 
 | Sujet | Décision |
 |---|---|
-| Framework | **Astro 7.x**, site **statique** par défaut ; **deux routes à la demande** (`/api/widget-identity` et `index.astro`) |
+| Framework | **Astro 7.x**, site **statique** par défaut ; **trois routes à la demande** (`/api/widget-identity`, `index.astro` et `/api/pv/…`) |
+| PV augmentés | **Hors du repo**, dans un stockage objet (Scaleway), lus par le serveur ; pas d'API dédiée |
 | Node | **24 LTS** (Astro 7 exige ≥ 22.12, versions paires uniquement). `.nvmrc` + `engines` |
 | Langage | TypeScript strict |
 | Gestionnaire | **pnpm** (champ `packageManager` dans `package.json`) |
@@ -107,6 +108,10 @@ PUBLIC_ZAQ_WIDGET_ID=13
 ZAQ_SIGNING_KEY=
 ZAQ_ISSUER=test-widget
 ZAQ_AUDIENCE=zaq-web-widget
+
+# --- PV augmentés ---
+# Dossier pv/ du stockage, lu par le serveur uniquement. Vide = aucun compte rendu.
+PV_BASE_URL=
 ```
 
 ## Sélecteur de commune
@@ -116,8 +121,19 @@ Plan et recette détaillés : `docs/commune-selector-plan.md`.
 - `index.astro` est rendue à la demande : `?commune=<INSEE>` absent → Saint-Saturnin ; format invalide → 302 vers `/` ; code inconnu → 404 ; commune connue mais dont le statut (`src/data/availability.ts`) n'est pas `available` → page « non disponible » **sans** script Zaq (ni jeton ni cookie), texte selon le statut ; `available` → widget avec `prompt_context`.
 - L'URL est la seule source de vérité : changer de commune = navigation complète (Zaq n'a pas d'API de nouvelle conversation). Pas de `localStorage`.
 - Données statiques : snapshot geo.api.gouv.fr dans `data/communes/` (sha256 vérifié), index généré par `pnpm build:data` (lancé avant `dev`, `build`, `check`). Statut d'une commune : table `COMMUNE_STATUSES` (`code INSEE → statut`), mise à jour manuelle ; absente de la table = `unfunded`. Statuts : `available` (widget), `unfunded` (non financée), `partially-funded` (en cours de financement), `funded` (financée, en cours d'ajout). Seul `available` est indexable ; les trois autres sont `noindex`. Le fichier est embarqué dans le bundle navigateur (recherche) : aucune donnée financière dedans.
-- Comptes rendus filtrés par la clé `commune` du frontmatter. EPCI préparés (types, `institution`), données à importer plus tard.
+- EPCI préparés (types, `institution`), données à importer plus tard.
 - Le kit de portage `refactor-commune-selector/` a été supprimé (récupérable dans l'historique Git).
+
+## PV augmentés (comptes rendus)
+
+Synthèses des procès-verbaux de conseils municipaux, produites hors du site par l'équipe (une paire `.md` + `.pdf` par séance), affichées dans la modale « Comptes rendus ». Consignes de format v1 transmises à l'équipe : document « PV augmentés : consignes de format pour ChatVote » (Claude Docs). Le module `src/lib/pv/pv-format.ts` en est la version exécutable.
+
+- **Stockage** : hors du repo, dans un stockage objet (Scaleway Object Storage prévu, accès pas encore ouvert), en lecture publique. Organisation : `pv/<INSEE>/<AAAA-MM-JJ>.md`, `.pdf` et `pv/<INSEE>/index.json`. Seconde séance le même jour : suffixe `-2`.
+- **Index** : `pnpm pv:index [dossier]` valide l'en-tête de chaque `.md` et écrit `index.json` par commune (séances de la plus récente à la plus ancienne). Un PV non conforme bloque l'index de sa commune. `source_url`, `source_sha256` ou `skill_version` vides : simples avertissements.
+- **Lecture** (`src/lib/pv/pv-store.ts`, serveur) : GET sur `PV_BASE_URL`, sans clé. Cache mémoire 5 min (30 s pour une erreur), délai maximal 4 s. Seules les séances listées dans l'index sont lues. Stockage absent ou en panne : la page fonctionne, la modale affiche un message.
+- **Affichage** : la liste vient de l'index, lu au rendu de `index.astro`. Le PV complet est chargé à la première ouverture depuis `/api/pv/<INSEE>/<id>.html`. Le PDF passe par `/api/pv/<INSEE>/<id>.pdf` (relayé) : le navigateur ne parle qu'à notre domaine, la CSP ne change pas.
+- **Markdown non fiable** (rédigé avec une IA) : converti par `satteri` (moteur d'Astro 7, binaire natif) sans HTML brut, images ni liens autres que `http(s)`/`mailto` ; le titre `#` est retiré (redondant avec l'en-tête de la vue).
+- **En local** : PV dans `pv-data/pv/` (gitignoré), `pnpm pv:serve` les sert sur `http://localhost:4322/pv`, à mettre dans `PV_BASE_URL`.
 
 ## Contraintes de confidentialité
 
@@ -167,12 +183,20 @@ src/
   lib/zaq-ids.ts               noms de cookies + validation (partagé, sans import Node)
   lib/conversation-cookie.ts   cookie conversationId « commune:id » (navigateur)
   lib/commune/                 sélecteur : code INSEE, index, recherche, contexte, requête, UI
+  lib/pv/                      PV augmentés : format, conversion Markdown, lecture du stockage
+  components/Records*.astro    modale « Comptes rendus » (liste + détail) ; scripts/records-modal.ts
   data/availability.ts         statut des communes (et EPCI disponibles) dans ChatVote
   data/generated/              index des communes généré au build (gitignoré)
   scripts/commune-switcher.ts  popover de recherche (navigateur)
   pages/index.astro            à la demande : chat, page « non disponible » ou 404
   pages/communes-index.json.ts index de recherche, prérendu
   pages/api/widget-identity.ts endpoint à la demande
+  pages/api/pv/[commune]/[file].ts  PV augmenté (HTML converti ou PDF relayé), à la demande
+scripts/
+  build-communes-index.ts      pnpm build:data
+  build-pv-index.ts            pnpm pv:index (validation + index.json par commune)
+  serve-pv.ts                  pnpm pv:serve (remplace le stockage en local)
+pv-data/                       PV augmentés en local (gitignoré)
   styles/
     tokens.css                 tokens Tandem adaptés (voir plus bas)
     fonts.css                  @font-face Manrope (fichiers locaux)
@@ -296,6 +320,7 @@ Logo ChatVote en grand (taille relative à la hauteur de l'écran) et texte d'in
 - `GET /api/widget-identity` depuis un autre site ou sans `Origin` ni `Sec-Fetch-Site: same-origin` : refusé (403).
 - Aucune clé (`ZAQ_SIGNING_KEY`) dans le build client ni dans l'historique Git.
 - Cookies bloqués par le navigateur : le site ne plante pas (le widget démarre une nouvelle conversation, sans erreur visible).
+- PV augmentés : la liste et le détail s'affichent, PDF et PV officiel s'ouvrent ; stockage coupé ou `PV_BASE_URL` vide : la page reste utilisable et la modale affiche un message. Sur une preview Vercel, `/api/pv/…` répond (moteur Markdown natif bien embarqué).
 - Pas de défilement parasite sur mobile (iOS Safari, Chrome Android) : le widget remplit exactement l'espace entre header et footer.
 - Lighthouse et accessibilité corrects (contrastes, focus visible).
 - `pnpm biome check`, `pnpm astro check`, `pnpm test` et le build passent sans erreur.
@@ -315,3 +340,4 @@ Logo ChatVote en grand (taille relative à la hauteur de l'écran) et texte d'in
 - Contenu final du header, logo dans le footer, pages légales.
 - Nom du repo et organisation Vercel ; domaine cible du site.
 - Audit de sécurité interne : `SECURITY-AUDIT.md` (local, gitignoré).
+- **PV augmentés** : création du bucket Scaleway (lecture publique, versioning, clé d'écriture limitée pour l'équipe), valeur de `PV_BASE_URL` en preview et en prod. Publication des PV au statut `relu par agent` ou seulement après `relu par une personne` ? Qui lance `pnpm pv:index` avant l'envoi ?
