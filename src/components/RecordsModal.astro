@@ -1,10 +1,10 @@
 ---
 // Modale qui recouvre le chat (mais ni le header ni le footer).
-// Vue liste + une vue détail par compte rendu prêt, toutes rendues au build ;
-// records-modal.ts bascule de l'une à l'autre.
-// Ne montre que les comptes rendus de la commune courante ; sans aucun, un
-// message à la place de la liste.
-import { getCollection } from "astro:content";
+// Vue liste + une vue détail par séance ; records-modal.ts bascule de l'une à
+// l'autre et charge le contenu d'une séance à sa première ouverture.
+// Les séances viennent de l'index de la commune dans le stockage des PV
+// augmentés (lu au rendu de la page, voir lib/pv). Sans séance : un message.
+import { pvStore } from "../lib/pv/pv-server";
 import RecordDetail from "./RecordDetail.astro";
 import RecordsList from "./RecordsList.astro";
 
@@ -16,13 +16,17 @@ interface Props {
 
 const { communeCode, communeName } = Astro.props;
 
-const records = communeCode
-  ? await getCollection("records", ({ data }) => data.commune === communeCode)
-  : [];
-const ready = records.filter((entry) => entry.data.status === "ready");
-const emptyMessage = communeName
-  ? `Les comptes rendus de ${communeName} ne sont pas encore disponibles dans ChatVote.`
-  : "Aucun compte rendu à afficher.";
+const result = communeCode
+  ? await pvStore.getIndex(communeCode)
+  : ({ status: "none" } as const);
+const seances = result.status === "ok" ? result.value.seances : [];
+
+const emptyMessage =
+  result.status === "error"
+    ? "Les comptes rendus sont momentanément indisponibles. Réessayez dans quelques minutes."
+    : communeName
+      ? `Les comptes rendus de ${communeName} ne sont pas encore disponibles dans ChatVote.`
+      : "Aucun compte rendu à afficher.";
 ---
 
 <div class="modal" id="records-modal" data-records-modal role="dialog" aria-label="Comptes rendus" inert>
@@ -36,10 +40,12 @@ const emptyMessage = communeName
   </div>
   <div class="content" data-records-content>
     {
-      records.length > 0 ? (
+      communeCode && seances.length > 0 ? (
         <>
-          <RecordsList records={records} />
-          {ready.map((entry) => <RecordDetail entry={entry} />)}
+          <RecordsList seances={seances} />
+          {seances.map((seance) => (
+            <RecordDetail seance={seance} communeCode={communeCode} />
+          ))}
         </>
       ) : (
         <p class="empty" data-records-empty>{emptyMessage}</p>

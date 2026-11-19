@@ -26,12 +26,48 @@ if (modal && chat && recordsTab && chatTab && closeButton) {
   let openDetail: HTMLElement | null = null;
   let openRow: HTMLElement | null = null;
 
-  // Le Markdown vient de contenus copiés tels quels : leurs liens sortent du site.
-  for (const link of modal.querySelectorAll<HTMLAnchorElement>(
-    "[data-record-detail] a[href^='http']",
-  )) {
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
+  // Charge le PV augmenté d'une séance (HTML déjà nettoyé par le serveur) à sa
+  // première ouverture. En cas d'échec, un bouton permet de réessayer.
+  const loadBody = async (detail: HTMLElement) => {
+    const body = detail.querySelector<HTMLElement>("[data-pv-body]");
+    const status = detail.querySelector<HTMLElement>("[data-pv-status]");
+    const message = status?.querySelector<HTMLElement>("[data-pv-message]");
+    const retry = status?.querySelector<HTMLButtonElement>("[data-pv-retry]");
+    const src = body?.dataset.pvSrc;
+    if (!body || !status || !message || !retry || !src) return;
+    if (body.dataset.state === "loading" || body.dataset.state === "loaded") {
+      return;
+    }
+
+    body.dataset.state = "loading";
+    body.setAttribute("aria-busy", "true");
+    status.hidden = false;
+    retry.hidden = true;
+    message.textContent = "Chargement du compte rendu…";
+    try {
+      const response = await fetch(src, { credentials: "same-origin" });
+      if (!response.ok) throw new Error(String(response.status));
+      body.innerHTML = await response.text();
+      // Les liens du PV (sources officielles) sortent du site.
+      for (const link of body.querySelectorAll<HTMLAnchorElement>("a[href]")) {
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+      body.dataset.state = "loaded";
+      status.hidden = true;
+    } catch {
+      body.dataset.state = "error";
+      message.textContent = "Impossible de charger ce compte rendu.";
+      retry.hidden = false;
+    } finally {
+      body.removeAttribute("aria-busy");
+    }
+  };
+
+  for (const detail of details) {
+    detail
+      .querySelector("[data-pv-retry]")
+      ?.addEventListener("click", () => loadBody(detail));
   }
 
   const showList = () => {
@@ -52,6 +88,7 @@ if (modal && chat && recordsTab && chatTab && closeButton) {
     openRow = row;
     if (content) content.scrollTop = 0;
     target.querySelector<HTMLElement>("[data-record-back]")?.focus();
+    void loadBody(target);
   };
 
   list?.addEventListener("click", (event) => {

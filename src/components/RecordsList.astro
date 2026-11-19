@@ -1,49 +1,31 @@
 ---
-import type { CollectionEntry } from "astro:content";
+import { formatDeliberations, formatSeanceDate } from "../lib/pv/pv-display";
+import type { PvSeance } from "../lib/pv/pv-format";
 
 interface Props {
-  /** Comptes rendus de la commune courante (filtrés par RecordsModal). */
-  records: CollectionEntry<"records">[];
+  /** Séances de la commune courante, de la plus récente à la plus ancienne. */
+  seances: PvSeance[];
 }
 
-const records = Astro.props.records
-  .map(({ id, data }) => ({
-    id,
-    ...data,
-    count: data.items.length || data.deliberations,
-    iso: data.date.toISOString().slice(0, 10),
-    year: data.date.getUTCFullYear(),
-  }))
-  .sort((a, b) => b.date.getTime() - a.date.getTime());
-
-const statusLabel = { ready: "Prêt", upcoming: "À venir" } as const;
+const { seances } = Astro.props;
 ---
 
 <ul class="list" data-records-list>
   {
-    records.map((record) => (
+    seances.map((seance) => (
       <li>
-        <button
-          type="button"
-          class="row"
-          data-record-id={record.id}
-          disabled={record.status !== "ready"}
-        >
+        <button type="button" class="row" data-record-id={seance.id}>
           <span class="date">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
             </svg>
-            <span class="year">{record.year}</span>
+            <span class="year">{seance.date.slice(0, 4)}</span>
           </span>
           <span class="text">
-            <span class="title">{record.type} du {record.iso}</span>
-            <span class="meta">
-              {record.count} délibération{record.count > 1 ? "s" : ""}
-            </span>
-          </span>
-          <span class="badge" data-status={record.status}>
-            {statusLabel[record.status]}
+            <span class="title">Conseil municipal du {formatSeanceDate(seance.date)}</span>
+            <span class="resume">{seance.resume}</span>
+            <span class="meta">{formatDeliberations(seance.nbDeliberations)}</span>
           </span>
           <svg class="chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="m9 6 6 6-6 6" />
@@ -77,13 +59,8 @@ const statusLabel = { ready: "Prêt", upcoming: "À venir" } as const;
     text-align: start;
     cursor: pointer;
 
-    &:hover:not(:disabled) {
+    &:hover {
       background: color-mix(in srgb, var(--modal-ink) 4%, transparent);
-    }
-
-    &:disabled {
-      cursor: default;
-      opacity: 0.6;
     }
   }
 
@@ -91,8 +68,10 @@ const statusLabel = { ready: "Prêt", upcoming: "À venir" } as const;
     display: flex;
     flex-direction: column;
     align-items: center;
+    align-self: flex-start;
     gap: 2px;
     min-width: 2.5rem;
+    padding-top: 2px;
     color: var(--modal-ink-secondary);
   }
 
@@ -105,34 +84,27 @@ const statusLabel = { ready: "Prêt", upcoming: "À venir" } as const;
     display: flex;
     flex: 1;
     flex-direction: column;
+    gap: 2px;
     min-width: 0;
   }
 
   .title {
-    font-weight: 500;
+    font-weight: 600;
+  }
+
+  /* Résumé sur deux lignes au plus ; le texte entier est dans le détail. */
+  .resume {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    font-size: var(--body-sm-size);
   }
 
   .meta {
     color: var(--modal-ink-secondary);
     font-size: var(--body-sm-size);
-  }
-
-  .badge {
-    padding: 2px var(--space-3);
-    border-radius: var(--radius-full);
-    font-size: 0.6875rem;
-    font-weight: 600;
-    line-height: 1.5;
-
-    &[data-status="ready"] {
-      background: var(--brand-indigo);
-      color: #fff;
-    }
-
-    &[data-status="upcoming"] {
-      border: 1px solid var(--modal-border);
-      color: var(--modal-ink-secondary);
-    }
   }
 
   .chevron {
