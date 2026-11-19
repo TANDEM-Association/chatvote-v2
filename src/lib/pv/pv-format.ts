@@ -43,12 +43,14 @@ export interface PvCommuneIndex {
 }
 
 export class PvFormatError extends Error {
-  constructor(
-    message: string,
-    readonly problems: string[] = [],
-  ) {
+  // Pas de propriété de paramètre (`readonly problems` dans le constructeur) :
+  // Node, en simple suppression des types, ne la prend pas en charge.
+  readonly problems: string[];
+
+  constructor(message: string, problems: string[] = []) {
     super(problems.length ? `${message}\n- ${problems.join("\n- ")}` : message);
     this.name = "PvFormatError";
+    this.problems = problems;
   }
 }
 
@@ -182,10 +184,11 @@ export function parsePvFrontmatter(
   for (const field of ["source_titre", "source_fichier", "skill"]) {
     if (!isNonEmptyString(data[field])) problems.push(`\`${field}\` est vide.`);
   }
-  if (
-    typeof data.source_sha256 !== "string" ||
-    !/^[0-9a-f]{64}$/.test(data.source_sha256)
-  ) {
+  // Traçabilité seulement (sans effet sur l'affichage) : vide = avertissement.
+  const sha = data.source_sha256 ?? "";
+  if (sha === "") {
+    warnings.push("`source_sha256` vide.");
+  } else if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) {
     problems.push("`source_sha256` doit compter 64 caractères hexadécimaux.");
   }
   if (!isNonEmptyString(data.skill_version)) {
