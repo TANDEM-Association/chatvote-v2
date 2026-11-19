@@ -17,6 +17,14 @@ export default defineConfig({
         access: "public",
         int: true,
       }),
+      // Dossier `pv/` du stockage des PV augmentés (lu par le serveur seulement).
+      // Absent : aucun compte rendu affiché (ex. preview sans stockage).
+      PV_BASE_URL: envField.string({
+        context: "server",
+        access: "public",
+        optional: true,
+        url: true,
+      }),
     },
   },
   server: {
