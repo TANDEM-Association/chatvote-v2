@@ -35,6 +35,15 @@ createServer((req, res) => {
   }
   res.writeHead(200, { "Content-Type": type, "Cache-Control": "no-store" });
   createReadStream(path).pipe(res);
-}).listen(port, "127.0.0.1", () => {
-  console.log(`PV servis depuis ${root} sur http://localhost:${port}/pv`);
-});
+})
+  .on("error", (error: NodeJS.ErrnoException) => {
+    if (error.code !== "EADDRINUSE") throw error;
+    console.error(
+      `Le port ${port} est déjà utilisé (un pv:serve tourne peut-être déjà : lsof -i :${port}). ` +
+        "Arrêtez-le, ou choisissez un autre port : PV_PORT=4323 pnpm pv:serve (et adaptez PV_BASE_URL).",
+    );
+    process.exit(1);
+  })
+  .listen(port, "127.0.0.1", () => {
+    console.log(`PV servis depuis ${root} sur http://localhost:${port}/pv`);
+  });
