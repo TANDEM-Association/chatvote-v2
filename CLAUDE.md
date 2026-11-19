@@ -110,8 +110,8 @@ ZAQ_ISSUER=test-widget
 ZAQ_AUDIENCE=zaq-web-widget
 
 # --- PV augmentés ---
-# Dossier pv/ du stockage, lu par le serveur uniquement. Vide = aucun compte rendu.
-PV_BASE_URL=
+# Dossier pv/ du bucket Scaleway (avec /pv), lu par le serveur uniquement. Vide = aucun compte rendu.
+PV_BASE_URL=https://chatvote-pv-augmentes.s3.fr-par.scw.cloud/pv
 ```
 
 ## Sélecteur de commune
@@ -128,12 +128,11 @@ Plan et recette détaillés : `docs/commune-selector-plan.md`.
 
 Synthèses des procès-verbaux de conseils municipaux, produites hors du site par l'équipe (une paire `.md` + `.pdf` par séance), affichées dans la modale « Comptes rendus ». Consignes de format v1 transmises à l'équipe : document « PV augmentés : consignes de format pour ChatVote » (Claude Docs). Le module `src/lib/pv/pv-format.ts` en est la version exécutable.
 
-- **Stockage** : hors du repo, dans un stockage objet (Scaleway Object Storage prévu, accès pas encore ouvert), en lecture publique. Organisation : `pv/<INSEE>/<AAAA-MM-JJ>.md`, `.pdf` et `pv/<INSEE>/index.json`. Seconde séance le même jour : suffixe `-2`.
-- **Index** : `pnpm pv:index [dossier]` valide l'en-tête de chaque `.md` et écrit `index.json` par commune (séances de la plus récente à la plus ancienne). Un PV non conforme bloque l'index de sa commune. `source_url`, `source_sha256` ou `skill_version` vides : simples avertissements.
+- **Stockage** : hors du repo, bucket Scaleway Object Storage `chatvote-pv-augmentes` (fr-par, versioning activé, ni chiffrement ni verrouillage d'objet). Bucket **privé** (contenu non listable), chaque fichier en lecture **publique** : à rendre public après chaque envoi, sinon il répond 403 (traité comme « pas de PV »). Organisation : `pv/<INSEE>/<AAAA-MM-JJ>.md`, `.pdf` et `pv/<INSEE>/index.json`. Seconde séance le même jour : suffixe `-2`.
+- **Index** : `pnpm pv:index <dossier>` (avant l'envoi) valide l'en-tête de chaque `.md` et écrit `index.json` par commune (séances de la plus récente à la plus ancienne). Un PV non conforme bloque l'index de sa commune. `source_url`, `source_sha256` ou `skill_version` vides : simples avertissements.
 - **Lecture** (`src/lib/pv/pv-store.ts`, serveur) : GET sur `PV_BASE_URL`, sans clé. Cache mémoire 5 min (30 s pour une erreur), délai maximal 4 s. Seules les séances listées dans l'index sont lues. Stockage absent ou en panne : la page fonctionne, la modale affiche un message.
 - **Affichage** : la liste vient de l'index, lu au rendu de `index.astro`. Le PV complet est chargé à la première ouverture depuis `/api/pv/<INSEE>/<id>.html`. Le PDF passe par `/api/pv/<INSEE>/<id>.pdf` (relayé) : le navigateur ne parle qu'à notre domaine, la CSP ne change pas.
 - **Markdown non fiable** (rédigé avec une IA) : converti par `satteri` (moteur d'Astro 7, binaire natif) sans HTML brut, images ni liens autres que `http(s)`/`mailto` ; le titre `#` est retiré (redondant avec l'en-tête de la vue).
-- **En local** : PV dans `pv-data/pv/` (gitignoré), `pnpm pv:serve` les sert sur `http://localhost:4322/pv`, à mettre dans `PV_BASE_URL`.
 
 ## Contraintes de confidentialité
 
@@ -195,8 +194,6 @@ src/
 scripts/
   build-communes-index.ts      pnpm build:data
   build-pv-index.ts            pnpm pv:index (validation + index.json par commune)
-  serve-pv.ts                  pnpm pv:serve (remplace le stockage en local)
-pv-data/                       PV augmentés en local (gitignoré)
   styles/
     tokens.css                 tokens Tandem adaptés (voir plus bas)
     fonts.css                  @font-face Manrope (fichiers locaux)
@@ -340,4 +337,4 @@ Logo ChatVote en grand (taille relative à la hauteur de l'écran) et texte d'in
 - Contenu final du header, logo dans le footer, pages légales.
 - Nom du repo et organisation Vercel ; domaine cible du site.
 - Audit de sécurité interne : `SECURITY-AUDIT.md` (local, gitignoré).
-- **PV augmentés** : création du bucket Scaleway (lecture publique, versioning, clé d'écriture limitée pour l'équipe), valeur de `PV_BASE_URL` en preview et en prod. Publication des PV au statut `relu par agent` ou seulement après `relu par une personne` ? Qui lance `pnpm pv:index` avant l'envoi ?
+- **PV augmentés** : clé d'écriture limitée pour l'équipe (IAM, droit `ObjectStorageObjectsWrite`) et envoi en ligne de commande ; `PV_BASE_URL` sur Vercel (preview et prod). Publication des PV au statut `relu par agent` ou seulement après `relu par une personne` ? Qui lance `pnpm pv:index` avant l'envoi ?

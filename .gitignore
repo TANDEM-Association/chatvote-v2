@@ -14,5 +14,3 @@ src/data/generated/
 # Notes internes (ne pas pousser)
 SECURITY-AUDIT.md
 
-# PV augmentés en local (simule le stockage Scaleway, servi par un serveur de fichiers)
-pv-data/

@@ -18,8 +18,7 @@
     "check": "astro check",
     "lint": "biome check",
     "test": "vitest run",
-    "pv:index": "node scripts/build-pv-index.ts",
-    "pv:serve": "node scripts/serve-pv.ts"
+    "pv:index": "node scripts/build-pv-index.ts"
   },
   "dependencies": {
     "@astrojs/vercel": "^11.0.22",
