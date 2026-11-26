@@ -44,7 +44,7 @@ Fichier réservé Astro 7 : ne **pas** créer `src/fetch.ts` (routage avancé).
 
 ## Intégration du widget Zaq
 
-Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/web_widget/blob/main/docs/integration-guideline.md), [Astro : rendu à la demande](https://docs.astro.build/en/guides/on-demand-rendering/), `ZAQ-WIDGET-INTEGRATION.en.md` (notre analyse initiale).
+Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/web_widget/blob/main/docs/integration-guideline.md), [Astro : rendu à la demande](https://docs.astro.build/en/guides/on-demand-rendering/). Notre analyse initiale (`docs/ZAQ-WIDGET-INTEGRATION.en.md`) a été supprimée (récupérable dans l'historique Git).
 
 ### Fonctionnement côté Zaq
 
@@ -55,7 +55,7 @@ Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/w
 - Le widget émet sur l'iframe `#zaq-widget` : `zaq:ready`, `zaq:authenticated`, `zaq:authentication-required`, `zaq:disconnected` (`event.detail.reason` : `expired`, `store_unavailable`, `backend_revoked`) et `zaq:conversation` (`event.detail.conversation_id`, au premier message). Le renouvellement du jeton est géré par `embed.js`.
 - Réglages : `zaq.widget.getSettings()` / `updateSettings({ theme, language })` (`theme` : light, dark, auto ; `language` : en, fr, ar).
 - Les **origines autorisées** (localhost:4321, previews Vercel, domaine final) se configurent dans le back-office Zaq (`/bo/channels/retrieval/web_widget`).
-- Le CSS de notre page **ne traverse pas l'iframe**. Le style du widget passe par l'attribut `stylesheet-url` de `embed.js` : la feuille est chargée **dans l'iframe** et définit les propriétés personnalisables `--zaq-widget-*` (couleurs, police, rayon, largeur max, marge ; voir `styling-guideline.md`, fourni par Zaq). Pas de `@layer`, pas de `!important`. L'URL relative est résolue contre l'origine de **notre** page ; les URL à l'intérieur de la feuille (polices) le sont contre la feuille. La CSP **du widget** doit autoriser notre domaine (`style-src`, `font-src`) : à vérifier avec Zaq, y compris pour chaque preview Vercel.
+- Le CSS de notre page **ne traverse pas l'iframe**. Le style du widget passe par l'attribut `stylesheet-url` de `embed.js` : la feuille est chargée **dans l'iframe** et définit les propriétés personnalisables `--zaq-widget-*` (couleurs, police, rayon, largeur max, marge ; voir `docs/zaq-styling-guideline.md`, fourni par Zaq). Pas de `@layer`, pas de `!important`. L'URL relative est résolue contre l'origine de **notre** page ; les URL à l'intérieur de la feuille (polices) le sont contre la feuille. La CSP **du widget** doit autoriser notre domaine (`style-src`, `font-src`) : à vérifier avec Zaq, y compris pour chaque preview Vercel.
 
 ### Notre implémentation
 
@@ -120,7 +120,7 @@ PV_BASE_URL=https://chatvote-pv-augmentes.s3.fr-par.scw.cloud/pv
 
 ## Sélecteur de commune
 
-Plan et recette détaillés : `docs/commune-selector-plan.md`.
+Le plan et la recette détaillés (`docs/commune-selector-plan.md`) ont été supprimés une fois le sélecteur livré (récupérables dans l'historique Git).
 
 - `index.astro` est rendue à la demande : `?commune=<INSEE>` absent → Saint-Saturnin ; format invalide → 302 vers `/` ; code inconnu → 404 ; commune connue mais dont le statut (`src/data/availability.ts`) n'est pas `available` → page « non disponible » **sans** script Zaq (ni jeton ni cookie), texte selon le statut ; `available` → widget avec `prompt_context`.
 - L'URL est la seule source de vérité : changer de commune = navigation complète (Zaq n'a pas d'API de nouvelle conversation). Pas de `localStorage`.
@@ -211,10 +211,14 @@ src/
 scripts/
   build-communes-index.ts      pnpm build:data
   build-pv-index.ts            pnpm pv:index (validation + index.json par commune)
-  styles/
-    tokens.css                 tokens Tandem adaptés (voir plus bas)
-    fonts.css                  @font-face Manrope (fichiers locaux)
-    base.css                   reset + styles globaux
+src/styles/
+  tokens.css                   tokens Tandem adaptés (voir plus bas)
+  fonts.css                    @font-face Manrope (fichiers locaux)
+  base.css                     reset + styles globaux
+data/communes/                 snapshot geo.api.gouv.fr (sha256 vérifié)
+docs/
+  zaq-styling-guideline.md     propriétés --zaq-widget-* (fourni par Zaq)
+  migration-scaleway-caddy.md  notes de migration vers Scaleway / Caddy
 public/
   fonts/                       Manrope .woff2 + licence OFL
   zaq-widget.css               thème du widget (propriétés --zaq-widget-*), servi tel quel, URL stable
@@ -329,7 +333,7 @@ Logo ChatVote en grand (taille relative à la hauteur de l'écran) et texte d'in
 - Le widget s'affiche, accepte une question, répond. Rechargement : le **même `userID`** est réutilisé et l'historique réapparaît.
 - Le jeton est renouvelé sans perdre la conversation quand il expire (renouvellement par `embed.js`).
 - **Sur une preview Vercel (avec la CSP)** : aucune requête ni erreur bloquée par la CSP dans la console ; l'onglet Réseau n'affiche aucune requête vers un domaine autre que le nôtre et celui de Zaq.
-- Sélecteur : recherche (nom, INSEE, code postal), clavier, mobile 375 px, changement de commune puis reprise de conversation côté Zaq ; voir `docs/commune-selector-plan.md` §11.
+- Sélecteur : recherche (nom, INSEE, code postal), clavier, mobile 375 px, changement de commune puis reprise de conversation côté Zaq ; recette détaillée dans `docs/commune-selector-plan.md` §11 (historique Git).
 - Notre domaine pose **exactement deux cookies** (`userID` HttpOnly + `conversationId`), avec les attributs prévus (`Secure`, `SameSite=Lax`, `Path=/`, durée voulue), plus `mtm_consent_removed` **seulement après une opposition** à la mesure d'audience, et **aucun** `localStorage`/`sessionStorage` dans notre origine.
 - Matomo : après opposition (case décochée), plus aucune requête vers `matomo.php` ; recocher rétablit le suivi.
 - `GET /api/widget-identity` depuis un autre site ou sans `Origin` ni `Sec-Fetch-Site: same-origin` : refusé (403).
