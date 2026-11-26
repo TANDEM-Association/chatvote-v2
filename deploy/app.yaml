@@ -1,0 +1,99 @@
+# Deployment + Service + Ingress du front ChatVote v2.
+# À ADAPTER avant le premier déploiement (voir les "CHANGE ME").
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels: { app: web }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: web }
+  template:
+    metadata:
+      labels: { app: web }
+    spec:
+      imagePullSecrets:
+        - name: scaleway-registry        # existe déjà dans chatvote-prod ; à vérifier/créer en staging
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: web
+          image: rg.fr-par.scw.cloud/chatvote-v2/web:CHANGE_ME_TAG
+          ports:
+            - containerPort: 4321
+          envFrom:
+            - secretRef:
+                name: web-env           # ZAQ_SIGNING_KEY, ZAQ_ISSUER, ZAQ_AUDIENCE, PUBLIC_ZAQ_WIDGET_ID, PV_BASE_URL
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 384Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+          readinessProbe:
+            tcpSocket: { port: 4321 }
+            periodSeconds: 5
+        - name: caddy
+          image: caddy:2-alpine
+          args: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+          ports:
+            - containerPort: 8080
+          env:
+            # Valeurs production = défauts du Caddyfile. En staging, mettre l'origine Zaq staging.
+            - { name: ZAQ_ORIGIN, value: "https://zaq.chatvote.org" }
+            - { name: ZAQ_HOST, value: "zaq.chatvote.org" }
+            - { name: MATOMO_ORIGIN, value: "https://stats.tndm.fr" }
+            - { name: XDG_DATA_HOME, value: /tmp/caddy-data }
+            - { name: XDG_CONFIG_HOME, value: /tmp/caddy-config }
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { memory: 128Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            periodSeconds: 5
+          volumeMounts:
+            - { name: caddyfile, mountPath: /etc/caddy, readOnly: true }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: caddyfile
+          configMap: { name: web-caddy }
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector: { app: web }
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [CHANGE_ME_HOST]                          # ex. app-staging.chatvote.org
+      secretName: web-tls
+  rules:
+    - host: CHANGE_ME_HOST
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: web, port: { number: 80 } }

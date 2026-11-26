@@ -31,7 +31,7 @@ Historique : une première version intégrait le chat via notre propre iframe (c
 | CSS | **Natif uniquement**. Pas de Tailwind. Variables CSS, nesting, `dvh`, `@layer`, styles scopés Astro |
 | Approche | **Mobile-first** (media queries en `min-width`) |
 | Thème | **Sombre unique**. Pas de thème clair, pas de bascule, pas de `prefers-color-scheme`. Le widget est forcé en sombre via `updateSettings` |
-| Hébergement | Vercel avec l'adapter **`@astrojs/vercel`** (requis par l'endpoint). Migration vers un hébergeur français possible plus tard (changer d'adapter) |
+| Hébergement | **Scaleway** (cluster Kapsule, Traefik + cert-manager pour le HTTPS) avec l'adapter **`@astrojs/node`** (mode standalone). Un pod = Astro + **Caddy** (en-têtes de sécurité par chemin). Voir « Déploiement Scaleway » |
 | Config | Variables d'environnement `PUBLIC_*` (navigateur) et variables **serveur** sans préfixe pour les secrets (`astro:env`) |
 | Analytics | **Matomo auto-hébergé** (`https://stats.tndm.fr`, site 3), **sans cookie de suivi** ; opposition par case à cocher (voir « Mesure d'audience ») |
 | Chat | **Widget Zaq** (`embed.js`), pas d'iframe maison |
@@ -63,7 +63,7 @@ Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/w
 - `src/scripts/zaq-widget.ts` : attend que `zaq.widget` existe, attend `zaq:ready` pour appliquer `updateSettings` puis `updateContext` (conversation du cookie pour la commune courante, sinon le `prompt_context` de la commune), et écrit le cookie `conversationId` sur `zaq:conversation`.
 - `src/pages/api/widget-identity.ts` (`prerender = false`) : GET same-origin uniquement (`Origin`, sinon `Sec-Fetch-Site: same-origin`), génère ou relit le `userID`, signe le jeton, répond `{ identity_token }` avec `Cache-Control: no-store`.
 - `src/lib/zaq-identity.ts` (signature, serveur), `src/lib/zaq-ids.ts` (noms de cookies et validation, partagé serveur/navigateur, **sans import Node**), `src/lib/conversation-cookie.ts` (écriture du cookie dans le navigateur).
-- `astro.config.mjs` : adapter Vercel et schéma `astro:env` (secrets serveur).
+- `astro.config.mjs` : adapter Node, `security.allowedDomains` et schéma `astro:env` (secrets serveur).
 
 ### Identité, cookies et contexte
 
@@ -76,7 +76,7 @@ Docs de référence : [guide d'intégration Zaq](https://github.com/www-zaq-ai/w
 
 ### Développement local avec le widget (ngrok)
 
-Le widget tourne sur une adresse publique (ngrok) et son iframe charge `/zaq-widget.css` et `/fonts/*` depuis `localhost:4321`. Deux protections bloquent cela en local, **sans effet sur Vercel** :
+Le widget tourne sur une adresse publique (ngrok) et son iframe charge `/zaq-widget.css` et `/fonts/*` depuis `localhost:4321`. Deux protections bloquent cela en local, **sans effet en production (Caddy)** :
 
 - **Chrome (Local Network Access)** : une page publique ne peut pas appeler `localhost`. Mettre `chrome://flags/#local-network-access-check` sur *Disabled* (profil de dev uniquement, à remettre sur Default ensuite) ou autoriser « Accès au réseau local » pour le site ngrok.
 - **Serveur de dev Astro 7** : il répond 403 « Cross-origin request blocked » aux sous-ressources cross-site sans en-tête `Origin`. Le plugin `dev-allow-zaq-assets` d'`astro.config.mjs` retire `Sec-Fetch-Site` pour ces seuls chemins (`/zaq-widget.css`, `/fonts/*`), en dev uniquement. Les CORS du serveur de dev sont ouverts (`server.headers`, `vite.server.cors`) pour la même raison.
@@ -84,7 +84,7 @@ Le widget tourne sur une adresse publique (ngrok) et son iframe charge `/zaq-wid
 
 ### Secrets et variables d'environnement
 
-Variables **serveur** (jamais de préfixe `PUBLIC_`, jamais dans le code ni dans Git) : `ZAQ_SIGNING_KEY` (fournie par Zaq), `ZAQ_ISSUER`, `ZAQ_AUDIENCE`. Elles vont dans `.env` (gitignoré) en local et dans les variables d'environnement Vercel. `ZAQ_ISSUER` / `ZAQ_AUDIENCE` valent pour l'instant les **valeurs d'exemple du guide Zaq** (`test-widget` / `zaq-web-widget`) : à confirmer.
+Variables **serveur** (jamais de préfixe `PUBLIC_`, jamais dans le code ni dans Git) : `ZAQ_SIGNING_KEY` (fournie par Zaq), `ZAQ_ISSUER`, `ZAQ_AUDIENCE`. Elles vont dans `.env` (gitignoré) en local et dans le secret Kubernetes `web-env` (lu par le pod) en production. `ZAQ_ISSUER` / `ZAQ_AUDIENCE` valent pour l'instant les **valeurs d'exemple du guide Zaq** (`test-widget` / `zaq-web-widget`) : à confirmer.
 
 `.env.example` (référence) :
 
@@ -156,9 +156,9 @@ Synthèses des procès-verbaux de conseils municipaux, produites hors du site pa
 - Polices, logos et favicon sont **servis localement** (aucun hotlink).
 - Zaq reçoit l'adresse IP des visiteurs (il est hébergé par Tandem : pas de transfert à un tiers).
 
-### CSP et en-têtes (`vercel.json`)
+### CSP et en-têtes (`deploy/Caddyfile`)
 
-Rendre la règle vérifiable techniquement. État actuel (à valider sur une preview Vercel : la CSP ne s'applique **pas** en `pnpm dev`) :
+Rendre la règle vérifiable techniquement. État actuel (à valider sur le staging : la CSP ne s'applique **pas** en `pnpm dev`) :
 
 ```
 default-src 'self';
@@ -173,11 +173,23 @@ form-action 'none';
 frame-ancestors 'none'
 ```
 
-- `<ORIGINE_ZAQ>` = origine exacte de `PUBLIC_ZAQ_URL`, jamais `*`. Elle est **écrite en dur** dans `vercel.json` : à mettre à jour quand l'URL Zaq change (`vercel-config.test.ts` vérifie la cohérence avec `.env.example`).
+- `<ORIGINE_ZAQ>` = origine exacte de `PUBLIC_ZAQ_URL`, jamais `*`. Elle est **écrite en dur** comme valeur par défaut de `ZAQ_ORIGIN` / `ZAQ_HOST` dans `deploy/Caddyfile` (le staging les surcharge dans `deploy/app.yaml`) : à mettre à jour quand l'URL Zaq change (`caddyfile.test.ts` vérifie la cohérence avec `.env.example`).
 - Pas de `'unsafe-inline'` : `build.inlineStylesheets: 'never'` et `vite.build.assetsInlineLimit: 0` dans `astro.config.mjs`, scripts bundlés en fichiers.
-- `/fonts/*` envoie `Access-Control-Allow-Origin: <ORIGINE_ZAQ>` : la police Manrope est chargée depuis l'iframe du widget (cross-origin, CORS requis). `/zaq-widget.css` a le même en-tête CORS et un cache court (1 h). En local, `astro dev` ignore `vercel.json` : `server.headers` dans `astro.config.mjs` envoie `Access-Control-Allow-Origin: *` (feuille et polices publiques).
+- `/fonts/*` envoie `Access-Control-Allow-Origin: <ORIGINE_ZAQ>` : la police Manrope est chargée depuis l'iframe du widget (cross-origin, CORS requis). `/zaq-widget.css` a le même en-tête CORS et un cache court (1 h). En local, `astro dev` n'applique pas le Caddyfile : `server.headers` dans `astro.config.mjs` envoie `Access-Control-Allow-Origin: *` (feuille et polices publiques).
 - `Permissions-Policy` restrictive (avec `clipboard-write` pour l'origine Zaq), `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options: DENY`.
 - `img-src`, `style-src` et `font-src` devront peut-être inclure l'hôte Zaq : le guide ne les liste pas, à valider en recette.
+
+## Déploiement Scaleway
+
+Cluster Kapsule `k8s-ingestion` (Paris), où tourne déjà Zaq (`chatvote-prod`, `chatvote-staging`). Traefik (IP `51.159.27.173`) et cert-manager (`ClusterIssuer letsencrypt-prod`) existent. Registry : `rg.fr-par.scw.cloud/chatvote-v2/web`.
+
+1. **Image** (nœuds en x86 : `--platform linux/amd64` sur Mac Apple). Les `PUBLIC_*` sont figées au build ; `PUBLIC_ZAQ_WIDGET_ID` est obligatoire :
+   `docker build --platform linux/amd64 --build-arg PUBLIC_ZAQ_URL=… --build-arg PUBLIC_ZAQ_WIDGET_ID=… --build-arg PUBLIC_MATOMO_URL=https://stats.tndm.fr --build-arg PUBLIC_MATOMO_SITE_ID=3 -t rg.fr-par.scw.cloud/chatvote-v2/web:<tag> .` puis `docker push`.
+2. **Secret d'exécution** `web-env` (namespace du déploiement) : `ZAQ_SIGNING_KEY`, `ZAQ_ISSUER`, `ZAQ_AUDIENCE`, `PUBLIC_ZAQ_WIDGET_ID` (lue aussi à l'exécution) et `PV_BASE_URL` si les PV sont activés. Jamais dans Git.
+3. **Manifestes** : renseigner le tag et le nom d'hôte dans `deploy/app.yaml`, puis `kubectl apply -k deploy/ -n <namespace>`. Staging : surcharger `ZAQ_ORIGIN` / `ZAQ_HOST` du conteneur `caddy` avec l'origine Zaq staging.
+4. **DNS** (zone hors Scaleway et hors Vercel) : enregistrement A du nom d'hôte vers `51.159.27.173`.
+5. Derrière Traefik, `security.allowedDomains` (`**.chatvote.org`, https) permet à Astro de reconstruire l'URL publique ; sans lui, `/api/widget-identity` refuse les requêtes qui portent un en-tête `Origin`. Caddy garde les `X-Forwarded-*` de Traefik (`trusted_proxies`).
+6. Le Caddyfile ne se teste pas en `pnpm dev` : vérifier avec `curl -I` sur la page, `/fonts/Manrope-Variable.woff2` et `/zaq-widget.css`, et la console du navigateur (aucune erreur CSP).
 
 ## Structure du projet
 
@@ -224,8 +236,10 @@ public/
   zaq-widget.css               thème du widget (propriétés --zaq-widget-*), servi tel quel, URL stable
   logo-chatvote.svg, tandem-logo.svg
   favicon.svg
-astro.config.mjs               adapter Vercel, schéma astro:env, options CSP-friendly
-vercel.json                    CSP et en-têtes
+astro.config.mjs               adapter Node, schéma astro:env, options CSP-friendly
+Dockerfile                     image du front (pnpm, Node 24, Debian)
+deploy/Caddyfile               CSP et en-têtes par chemin (remplace vercel.json)
+deploy/app.yaml, kustomization.yaml   Deployment, Service, Ingress Kubernetes (Caddy en conteneur du même pod)
 biome.json
 .nvmrc
 .env.example

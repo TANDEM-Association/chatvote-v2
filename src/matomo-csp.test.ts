@@ -1,16 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { globalHeader } from "./caddyfile-helper";
 
 const read = (path: string) =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-const vercel = JSON.parse(read("../vercel.json")) as {
-  headers: { headers: { key: string; value: string }[] }[];
-};
-const csp =
-  vercel.headers
-    .flatMap((h) => h.headers)
-    .find((h) => h.key === "Content-Security-Policy")?.value ?? "";
+const csp = globalHeader("Content-Security-Policy");
 const directive = (name: string) =>
   csp.split(";").find((d) => d.trim().startsWith(`${name} `)) ?? "";
 
