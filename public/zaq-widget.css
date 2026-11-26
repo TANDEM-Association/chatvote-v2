@@ -48,41 +48,53 @@
 
 /* ------------------------------------------------------------------
    Éléments sans propriété dédiée : on cible les classes internes de Zaq
-   (susceptibles de changer côté Zaq, à revérifier aux mises à jour).
+   (web-widget.css, susceptibles de changer côté Zaq, à revérifier aux mises à jour).
+
+   Spécificité : chez Zaq, seules les variables sont dans @layer ; les règles des
+   composants sont hors layer et leur feuille peut passer après la nôtre. Sélecteur
+   de même poids = Zaq gagne. D'où le préfixe :root (+1 classe) sur chaque règle.
    ------------------------------------------------------------------ */
 
 /* Statut des étapes (« 4421 ms · Terminé ») : Zaq l'affiche en couleur primaire (2,4 sur le champ).
-   Lavande dérivée de l'indigo : 9,3 sur #180645, 9,8 sur #130436 (AA et AAA). */
-.zaq-step-state {
+   Lavande dérivée de l'indigo : 9,3 sur #180645, 9,8 sur #130436 (AA et AAA).
+   L'état « échec » de Zaq (.zaq-response-step[data-status="failed"] .zaq-step-state, plus
+   spécifique) reste prioritaire : le statut d'erreur garde sa couleur rouge. */
+:root .zaq-step-state {
   color: #b9b0ff;
 }
 
 /* Lien « Ouvrir la conversation » : contour + texte lavande au lieu du bleu primaire (2,3).
    Texte 9,3 sur le fond ; bordure 4,4 (>= 3:1). */
-.zaq-reopen {
+:root .zaq-reopen {
   background-color: transparent;
   color: #b9b0ff;
   border: 1px solid #7d75b3;
 }
 
 /* Bouton « Envoyer » : plus clair que le primary pour se détacher du champ (3,2 contre #130436),
-   texte blanc à 6:1. À VÉRIFIER : nom de classe exact à relever dans l'inspecteur de l'iframe
-   (clic droit sur le bouton > Inspecter) et à remplacer ci-dessous si différent. */
-.zaq-send-button {
+   texte blanc à 6:1. */
+:root .zaq-composer-send {
   background-color: #5a4ae0;
   color: #ffffff;
 }
 
-/* État inactif : pas d'opacity (elle écrase aussi le texte) ; fond 2,5 contre le champ,
-   texte #d5d0f5 à 7,6:1. */
-.zaq-send-button:disabled {
+/* État inactif : pas d'opacity (Zaq met 0,45, ce qui écrase aussi le texte) ; fond 2,5 contre
+   le champ, texte #d5d0f5 à 7,6:1. */
+:root .zaq-composer-send:disabled {
   opacity: 1;
   background-color: #4a3bc8;
   color: #d5d0f5;
 }
 
-/* Focus clavier visible partout (WCAG 2.4.7 / 2.4.11) */
+/* Focus clavier visible partout (WCAG 2.4.7 / 2.4.11).
+   1) Contour par défaut pour les éléments que Zaq ne traite pas. */
 :focus-visible {
   outline: 2px solid #b9b0ff;
   outline-offset: 2px;
+}
+
+/* 2) Zaq dessine ses contours en couleur primaire (2,3 sur le fond, sous 3:1) avec des
+   sélecteurs jusqu'à (0,2,1) : on ne change que la couleur (largeur et décalage de Zaq gardés). */
+:root:root :focus-visible {
+  outline-color: #b9b0ff;
 }
