@@ -1,0 +1,10 @@
+# Déploiement : kubectl apply -k deploy/ -n <namespace>
+# Le suffixe de hash du ConfigMap relance le pod quand le Caddyfile change.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - app.yaml
+configMapGenerator:
+  - name: web-caddy
+    files:
+      - Caddyfile

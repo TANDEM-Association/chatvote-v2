@@ -1,4 +1,4 @@
-import vercel from "@astrojs/vercel";
+import node from "@astrojs/node";
 import { defineConfig, envField } from "astro/config";
 
 export default defineConfig({
@@ -7,7 +7,13 @@ export default defineConfig({
   output: "static",
   // URL publique : sert aux liens absolus des pages prérendues (aperçus de partage).
   site: "https://app.chatvote.org",
-  adapter: vercel(),
+  adapter: node({ mode: "standalone" }),
+  security: {
+    // Derrière Traefik et Caddy, Astro ne fait confiance à X-Forwarded-Host/Proto que
+    // pour ces domaines. Sans cela, request.url est en http:// et le contrôle
+    // d'origine de /api/widget-identity refuse toute requête portant un en-tête Origin.
+    allowedDomains: [{ hostname: "**.chatvote.org", protocol: "https" }],
+  },
   env: {
     schema: {
       // Secrets du jeton d'identité Zaq : serveur uniquement, jamais exposés au navigateur.
@@ -30,7 +36,7 @@ export default defineConfig({
     },
   },
   server: {
-    // astro dev ignore vercel.json : la feuille du widget et les polices sont
+    // astro dev n'applique pas les en-têtes de deploy/Caddyfile : la feuille du widget et les polices sont
     // chargées depuis l'iframe Zaq (autre origine), donc CORS aussi en local.
     // Feuille et polices sont publiques, sans cookies : * suffit en dev.
     headers: { "Access-Control-Allow-Origin": "*" },

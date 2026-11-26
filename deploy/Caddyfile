@@ -1,0 +1,45 @@
+# En-têtes de sécurité : traduction de vercel.json.
+# Origines Zaq / Matomo : valeurs par défaut = production, surchargées par variables d'environnement (staging).
+{
+	admin off
+	auto_https off
+	servers {
+		# Traefik (réseau du cluster) est devant : garder ses X-Forwarded-Proto/Host,
+		# dont dépend le contrôle d'origine de /api/widget-identity.
+		trusted_proxies static private_ranges
+	}
+}
+
+:8080 {
+	encode zstd gzip
+
+	@astro path /_astro/*
+	@fonts path /fonts/*
+	@zaqcss path /zaq-widget.css
+	@communes path /communes-index.json
+
+	# Tout
+	header {
+		Content-Security-Policy "default-src 'self'; script-src 'self' {$ZAQ_ORIGIN:https://zaq.chatvote.org} {$MATOMO_ORIGIN:https://stats.tndm.fr}; style-src 'self'; font-src 'self'; img-src 'self' data: {$MATOMO_ORIGIN:https://stats.tndm.fr}; connect-src 'self' {$ZAQ_ORIGIN:https://zaq.chatvote.org} wss://{$ZAQ_HOST:zaq.chatvote.org} {$MATOMO_ORIGIN:https://stats.tndm.fr}; frame-src {$ZAQ_ORIGIN:https://zaq.chatvote.org}; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy `accelerometer=(), autoplay=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), clipboard-write=(self "{$ZAQ_ORIGIN:https://zaq.chatvote.org}")`
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	# Par chemin ('>' = appliqué après la réponse de l'app, pour écraser son Cache-Control)
+	header @astro >Cache-Control "public, max-age=31536000, immutable"
+
+	header @fonts >Cache-Control "public, max-age=31536000, immutable"
+	header @fonts Access-Control-Allow-Origin "{$ZAQ_ORIGIN:https://zaq.chatvote.org}"
+
+	header @zaqcss >Cache-Control "public, max-age=3600"
+	header @zaqcss Access-Control-Allow-Origin "{$ZAQ_ORIGIN:https://zaq.chatvote.org}"
+
+	header @communes >Cache-Control "public, max-age=3600"
+
+	respond /healthz 200
+
+	reverse_proxy 127.0.0.1:4321
+}
