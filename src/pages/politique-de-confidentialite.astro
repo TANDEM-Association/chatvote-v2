@@ -16,13 +16,12 @@ const cookieMaxAge = Number(
 );
 const cookieMonths = Math.max(1, Math.round(cookieMaxAge / (30 * 24 * 3600)));
 
-// Instance Matomo (module d'opposition) ; vide = mesure d'audience désactivée.
-const matomoUrl = (import.meta.env.PUBLIC_MATOMO_URL ?? "")
-  .trim()
-  .replace(/\/+$/, "");
-const optOutUrl = matomoUrl
-  ? `${matomoUrl}/index.php?module=CoreAdminHome&action=optOut&language=fr`
-  : "";
+// Mesure d'audience active (même condition que src/scripts/matomo.ts) : la case
+// d'opposition n'est affichée que dans ce cas.
+const matomoEnabled = Boolean(
+  (import.meta.env.PUBLIC_MATOMO_URL ?? "").trim() &&
+    (import.meta.env.PUBLIC_MATOMO_SITE_ID ?? "").trim(),
+);
 ---
 
 <LegalPage
@@ -36,8 +35,9 @@ const optOutUrl = matomoUrl
     <p class="intro lead">
       Pas de compte à créer : nous ne vous demandons ni votre nom, ni votre
       adresse e-mail, et nous ne cherchons pas à savoir qui vous êtes. Votre
-      localisation n’est ni demandée ni collectée : la commune est celle que
-      vous choisissez vous-même.
+      localisation n’est pas demandée et votre adresse IP n’est pas utilisée
+      pour vous localiser : la commune est celle que vous choisissez
+      vous-même.
     </p>
     <p class="intro lead">
       Nous n’avons pas besoin de ces informations pour vous répondre, et nous
@@ -135,12 +135,16 @@ const optOutUrl = matomoUrl
     </p>
     <p>
       <strong>Données collectées.</strong> Adresse IP anonymisée, pages consultées,
-      date et heure de la visite, type d’appareil, navigateur et système d’exploitation,
-      site ou moteur de recherche d’origine.
+      date et heure de la visite, type d’appareil, navigateur (et sa langue) et
+      système d’exploitation, site ou moteur de recherche d’origine. La
+      localisation par adresse IP n’est pas utilisée ; un pays approximatif
+      peut toutefois être déduit de la langue de votre navigateur.
     </p>
     <p>
       <strong>Cookies.</strong> Notre configuration de Matomo ne dépose aucun cookie
-      et ne lit aucune information sur votre terminal.
+      de suivi et ne lit aucune information sur votre terminal. Seul un petit
+      cookie technique, qui mémorise votre éventuelle opposition (voir
+      ci-dessous), est déposé si vous vous opposez à la mesure d’audience.
     </p>
     <p>
       <strong>Base légale.</strong> Intérêt légitime de l’éditeur à connaître l’audience
@@ -148,23 +152,25 @@ const optOutUrl = matomoUrl
       de recueil du consentement selon les lignes directrices de la CNIL.
     </p>
     <p>
-      <strong>Durée de conservation.</strong> Les données de visite sont conservées
-      au maximum 25 mois, puis supprimées ou agrégées de manière anonyme.
+      <strong>Durée de conservation.</strong> Les données détaillées de chaque
+      visite sont supprimées automatiquement au bout de 90 jours. Il ne subsiste
+      ensuite que des statistiques agrégées, qui ne contiennent plus aucune
+      donnée personnelle.
     </p>
     <p>
       <strong>Votre droit de vous opposer.</strong> Vous pouvez refuser d’être pris
       en compte dans la mesure d’audience. Nous respectons également le paramètre
       « Do Not Track » de votre navigateur.{
-        optOutUrl && " Vous pouvez aussi utiliser le module ci-dessous :"
+        matomoEnabled &&
+          " Vous pouvez aussi décocher la case ci-dessous : votre choix est alors mémorisé dans un cookie technique (mtm_consent_removed) sur votre navigateur, et plus aucune visite n’est comptée."
       }
     </p>
     {
-      optOutUrl && (
-        <iframe
-          class="optout"
-          src={optOutUrl}
-          title="Désactiver la mesure d'audience"
-        />
+      matomoEnabled && (
+        <label class="optout">
+          <input type="checkbox" id="suivi-actif" checked />
+          Autoriser la mesure d’audience anonyme
+        </label>
       )
     }
   </section>
@@ -185,7 +191,7 @@ const optOutUrl = matomoUrl
       compte :
     </p>
     <ul>
-      <li>Scaleway SAS (France) : hébergement du site et de la mesure d’audience.</li>
+      <li>Scaleway SAS (France) : hébergement du site.</li>
     </ul>
     <p>Nous ne vendons ni ne louons vos données à des tiers.</p>
   </section>
@@ -220,6 +226,12 @@ const optOutUrl = matomoUrl
       également un cookie technique, <strong>_zaq_key</strong>, propre à son
       domaine, d’une durée de {cookieMonths} mois et nécessaire au fonctionnement de
       l’assistant dans l'application Chat Vote.
+    </p>
+    <p>
+      Enfin, si vous vous opposez à la mesure d’audience (voir la section 3), un
+      cookie technique (<strong>mtm_consent_removed</strong>) est déposé pour
+      mémoriser ce choix. Il ne contient aucune information vous concernant et
+      n’est déposé que dans ce cas.
     </p>
   </section>
 
@@ -273,11 +285,27 @@ const optOutUrl = matomoUrl
   </section>
 </LegalPage>
 
+<script>
+  import "../scripts/matomo-optout";
+</script>
+
 <style>
   .optout {
-    width: 100%;
-    max-width: 600px;
-    height: 200px;
-    border: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: fit-content;
+    cursor: pointer;
+  }
+
+  .optout input {
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: var(--brand-indigo);
+  }
+
+  .optout input:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 </style>
