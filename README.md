@@ -1,6 +1,6 @@
 # ChatVote
 
-Nouvelle version minimale de [ChatVote](https://app.chatvote.org), un assistant conversationnel pour s'informer sur les programmes électoraux, porté par l'association [Tandem — Tech & Démocratie](https://tandem.ngo).
+Nouvelle version minimale de [ChatVote](https://app.chatvote.org), un assistant conversationnel pour s'informer sur ce qui est décidé à l'échelon local (communes, communautés d'agglomérations, etc.), porté par l'association [Tandem — Tech & Démocratie](https://tandem.ngo).
 
 Le site est un simple **conteneur** : un bandeau d'information, un header (logos ChatVote et Tandem), le **widget de chat [Zaq](https://github.com/www-zaq-ai/web_widget)** et un footer. Toute la logique métier (IA, données, historique des conversations) vit chez Zaq.
 
