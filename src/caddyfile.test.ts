@@ -10,7 +10,7 @@ const zaqUrl = new URL(/^PUBLIC_ZAQ_URL=(.+)$/m.exec(envExample)?.[1] ?? "");
 const zaqOrigin = zaqUrl.origin;
 const zaqWebSocket = `wss://${zaqUrl.host}`;
 
-describe("deploy/Caddyfile", () => {
+describe("deploy/base/Caddyfile", () => {
   const csp = globalHeader("Content-Security-Policy");
 
   it("autorise exactement l'origine Zaq de .env.example (script, iframe, API, WebSocket)", () => {
@@ -42,6 +42,7 @@ describe("deploy/Caddyfile", () => {
   it("pose les autres en-têtes de sécurité sur toutes les réponses", () => {
     expect(globalHeader("X-Content-Type-Options")).toBe("nosniff");
     expect(globalHeader("X-Frame-Options")).toBe("DENY");
+    expect(globalHeader("Strict-Transport-Security")).toBe("max-age=31536000");
     expect(globalHeader("Referrer-Policy")).toBe(
       "strict-origin-when-cross-origin",
     );

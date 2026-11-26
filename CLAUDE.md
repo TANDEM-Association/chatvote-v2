@@ -156,7 +156,7 @@ Synthèses des procès-verbaux de conseils municipaux, produites hors du site pa
 - Polices, logos et favicon sont **servis localement** (aucun hotlink).
 - Zaq reçoit l'adresse IP des visiteurs (il est hébergé par Tandem : pas de transfert à un tiers).
 
-### CSP et en-têtes (`deploy/Caddyfile`)
+### CSP et en-têtes (`deploy/base/Caddyfile`)
 
 Rendre la règle vérifiable techniquement. État actuel (à valider sur le staging : la CSP ne s'applique **pas** en `pnpm dev`) :
 
@@ -173,7 +173,7 @@ form-action 'none';
 frame-ancestors 'none'
 ```
 
-- `<ORIGINE_ZAQ>` = origine exacte de `PUBLIC_ZAQ_URL`, jamais `*`. Elle est **écrite en dur** comme valeur par défaut de `ZAQ_ORIGIN` / `ZAQ_HOST` dans `deploy/Caddyfile` (le staging les surcharge dans `deploy/app.yaml`) : à mettre à jour quand l'URL Zaq change (`caddyfile.test.ts` vérifie la cohérence avec `.env.example`).
+- `<ORIGINE_ZAQ>` = origine exacte de `PUBLIC_ZAQ_URL`, jamais `*`. Elle est **écrite en dur** comme valeur par défaut de `ZAQ_ORIGIN` / `ZAQ_HOST` dans `deploy/base/Caddyfile` (l'overlay `deploy/overlays/staging` les surcharge) : à mettre à jour quand l'URL Zaq change (`caddyfile.test.ts` vérifie la cohérence avec `.env.example`).
 - Pas de `'unsafe-inline'` : `build.inlineStylesheets: 'never'` et `vite.build.assetsInlineLimit: 0` dans `astro.config.mjs`, scripts bundlés en fichiers.
 - `/fonts/*` envoie `Access-Control-Allow-Origin: <ORIGINE_ZAQ>` : la police Manrope est chargée depuis l'iframe du widget (cross-origin, CORS requis). `/zaq-widget.css` a le même en-tête CORS et un cache court (1 h). En local, `astro dev` n'applique pas le Caddyfile : `server.headers` dans `astro.config.mjs` envoie `Access-Control-Allow-Origin: *` (feuille et polices publiques).
 - `Permissions-Policy` restrictive (avec `clipboard-write` pour l'origine Zaq), `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options: DENY`.
@@ -183,10 +183,10 @@ frame-ancestors 'none'
 
 Cluster Kapsule `k8s-ingestion` (Paris), où tourne déjà Zaq (`chatvote-prod`, `chatvote-staging`). Traefik (IP `51.159.27.173`) et cert-manager (`ClusterIssuer letsencrypt-prod`) existent. Registry : `rg.fr-par.scw.cloud/chatvote-v2/web`.
 
-1. **Image** (nœuds en x86 : `--platform linux/amd64` sur Mac Apple). Les `PUBLIC_*` sont figées au build ; `PUBLIC_ZAQ_WIDGET_ID` est obligatoire :
-   `docker build --platform linux/amd64 --build-arg PUBLIC_ZAQ_URL=… --build-arg PUBLIC_ZAQ_WIDGET_ID=… --build-arg PUBLIC_MATOMO_URL=https://stats.tndm.fr --build-arg PUBLIC_MATOMO_SITE_ID=3 -t rg.fr-par.scw.cloud/chatvote-v2/web:<tag> .` puis `docker push`.
-2. **Secret d'exécution** `web-env` (namespace du déploiement) : `ZAQ_SIGNING_KEY`, `ZAQ_ISSUER`, `ZAQ_AUDIENCE`, `PUBLIC_ZAQ_WIDGET_ID` (lue aussi à l'exécution) et `PV_BASE_URL` si les PV sont activés. Jamais dans Git.
-3. **Manifestes** : renseigner le tag et le nom d'hôte dans `deploy/app.yaml`, puis `kubectl apply -k deploy/ -n <namespace>`. Staging : surcharger `ZAQ_ORIGIN` / `ZAQ_HOST` du conteneur `caddy` avec l'origine Zaq staging.
+1. **Image** (nœuds en x86 : `--platform linux/amd64` sur Mac Apple). Les `PUBLIC_*`, `PUBLIC_ZAQ_WIDGET_ID` (obligatoire) et `PV_BASE_URL` sont **figées au build** : les mettre dans le secret du pod n'a aucun effet, il faut reconstruire l'image :
+   `docker build --platform linux/amd64 --build-arg PUBLIC_ZAQ_URL=… --build-arg PUBLIC_ZAQ_WIDGET_ID=… --build-arg PUBLIC_MATOMO_URL=https://stats.tndm.fr --build-arg PUBLIC_MATOMO_SITE_ID=3 --build-arg PV_BASE_URL=https://chatvote-pv-augmentes.s3.fr-par.scw.cloud/pv -t rg.fr-par.scw.cloud/chatvote-v2/web:<tag> .` puis `docker push`.
+2. **Secret d'exécution** `web-env` (namespace du déploiement) : `ZAQ_SIGNING_KEY`, `ZAQ_ISSUER`, `ZAQ_AUDIENCE` seulement : ce sont les seules variables lues à l'exécution. Jamais dans Git.
+3. **Manifestes** (kustomize : `deploy/base` + un overlay par environnement). Le tag de l'image se règle dans `deploy/overlays/<env>/kustomization.yaml`. Vérifier le rendu puis déployer : `kubectl kustomize deploy/overlays/staging`, `kubectl diff -k deploy/overlays/staging`, `kubectl apply -k deploy/overlays/staging` (idem `prod`). Les overlays fixent le namespace, le domaine et l'origine Zaq (staging : Zaq de staging). Les secrets `web-env` et `scaleway-registry` doivent exister dans le namespace.
 4. **DNS** (zone hors Scaleway et hors Vercel) : enregistrement A du nom d'hôte vers `51.159.27.173`.
 5. Derrière Traefik, `security.allowedDomains` (`**.chatvote.org`, https) permet à Astro de reconstruire l'URL publique ; sans lui, `/api/widget-identity` refuse les requêtes qui portent un en-tête `Origin`. Caddy garde les `X-Forwarded-*` de Traefik (`trusted_proxies`).
 6. Le Caddyfile ne se teste pas en `pnpm dev` : vérifier avec `curl -I` sur la page, `/fonts/Manrope-Variable.woff2` et `/zaq-widget.css`, et la console du navigateur (aucune erreur CSP).
@@ -238,8 +238,8 @@ public/
   favicon.svg
 astro.config.mjs               adapter Node, schéma astro:env, options CSP-friendly
 Dockerfile                     image du front (pnpm, Node 24, Debian)
-deploy/Caddyfile               CSP et en-têtes par chemin (remplace vercel.json)
-deploy/app.yaml, kustomization.yaml   Deployment, Service, Ingress Kubernetes (Caddy en conteneur du même pod)
+deploy/base/Caddyfile          CSP et en-têtes par chemin (remplace vercel.json)
+deploy/base/app.yaml, deploy/overlays/{staging,prod}   Deployment, Service, Ingress Kubernetes (Caddy en conteneur du même pod), kustomize
 biome.json
 .nvmrc
 .env.example
