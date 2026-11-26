@@ -11,8 +11,9 @@ FROM base AS build
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-# Variables PUBLIC_* : figées dans les pages au moment du build (à passer avec --build-arg).
-# PUBLIC_ZAQ_WIDGET_ID est obligatoire (le build échoue sans).
+# Variables figées au moment du build (à passer avec --build-arg) : toutes les PUBLIC_*, mais aussi
+# PUBLIC_ZAQ_WIDGET_ID (obligatoire : le build échoue sans) et PV_BASE_URL (vide = aucun compte rendu).
+# Les modifier demande de reconstruire l'image : les définir dans le pod à l'exécution n'a aucun effet.
 ARG PUBLIC_ZAQ_URL
 ARG PUBLIC_ZAQ_PATH_PREFIX=""
 ARG PUBLIC_ZAQ_WIDGET_ID
@@ -48,5 +49,5 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 USER node
 EXPOSE 4321
-# Secrets d'exécution (ZAQ_SIGNING_KEY, ZAQ_ISSUER, ZAQ_AUDIENCE, PV_BASE_URL) : fournis par le pod, pas par l'image.
+# Seuls les secrets sont lus à l'exécution (ZAQ_SIGNING_KEY, ZAQ_ISSUER, ZAQ_AUDIENCE) : fournis par le pod, pas par l'image.
 CMD ["node", "./dist/server/entry.mjs"]
