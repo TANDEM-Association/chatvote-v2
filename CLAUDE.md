@@ -33,11 +33,11 @@ Historique : une première version intégrait le chat via notre propre iframe (c
 | Thème | **Sombre unique**. Pas de thème clair, pas de bascule, pas de `prefers-color-scheme`. Le widget est forcé en sombre via `updateSettings` |
 | Hébergement | Vercel avec l'adapter **`@astrojs/vercel`** (requis par l'endpoint). Migration vers un hébergeur français possible plus tard (changer d'adapter) |
 | Config | Variables d'environnement `PUBLIC_*` (navigateur) et variables **serveur** sans préfixe pour les secrets (`astro:env`) |
-| Analytics | **Aucun** |
+| Analytics | **Matomo auto-hébergé** (`https://stats.tndm.fr`, site 3), **sans cookie de suivi** ; opposition par case à cocher (voir « Mesure d'audience ») |
 | Chat | **Widget Zaq** (`embed.js`), pas d'iframe maison |
 | Identité visiteur | `user_id` = UUID v4 généré par l'endpoint, dans un cookie `userID` **HttpOnly**, pour que Zaq reconnaisse le visiteur et affiche son historique |
 | Langue du site | Français uniquement (`lang="fr"`), pas d'i18n |
-| Pages légales | Reportées (à traiter lors de l'enrichissement du footer) |
+| Pages légales | `/mentions-legales` et `/politique-de-confidentialite` (statiques, mise en page `LegalPage.astro`, liens dans le footer) |
 | Liens (don, en savoir plus, logos) | Variables d'environnement ; lien vide = bouton ou lien masqué |
 
 Fichier réservé Astro 7 : ne **pas** créer `src/fetch.ts` (routage avancé).
@@ -109,6 +109,10 @@ ZAQ_SIGNING_KEY=
 ZAQ_ISSUER=test-widget
 ZAQ_AUDIENCE=zaq-web-widget
 
+# --- Matomo (mesure d'audience, vide = désactivé) ---
+PUBLIC_MATOMO_URL=https://stats.tndm.fr
+PUBLIC_MATOMO_SITE_ID=3
+
 # --- PV augmentés ---
 # Dossier pv/ du bucket Scaleway (avec /pv), lu par le serveur uniquement. Vide = aucun compte rendu.
 PV_BASE_URL=https://chatvote-pv-augmentes.s3.fr-par.scw.cloud/pv
@@ -134,14 +138,23 @@ Synthèses des procès-verbaux de conseils municipaux, produites hors du site pa
 - **Affichage** : la liste vient de l'index, lu au rendu de `index.astro`. Le PV complet est chargé à la première ouverture depuis `/api/pv/<INSEE>/<id>.html`. Le PDF passe par `/api/pv/<INSEE>/<id>.pdf` (relayé) : le navigateur ne parle qu'à notre domaine, la CSP ne change pas.
 - **Markdown non fiable** (rédigé avec une IA) : converti par `satteri` (moteur d'Astro 7, binaire natif) sans HTML brut, images ni liens autres que `http(s)`/`mailto` ; le titre `#` est retiré (redondant avec l'en-tête de la vue).
 
+## Mesure d'audience (Matomo)
+
+- Instance **auto-hébergée par Tandem** : `https://stats.tndm.fr` (domaine stable ; l'infra prévient avant tout changement car la CSP en dépend). ID de site **3** (ChatVote ; tndm.fr = 1). Administration réservée au réseau privé (ZTNA) ; seuls `matomo.js` et `matomo.php` sont publics.
+- `src/scripts/matomo.ts` (bundlé, pas de script inline : CSP) charge `matomo.js` avec `disableCookies`, `setDoNotTrack`, `trackPageView`, `enableLinkTracking`. Variables `PUBLIC_MATOMO_URL` et `PUBLIC_MATOMO_SITE_ID` ; l'une des deux vide = suivi désactivé.
+- **Matomo ignore les visites dont l'adresse n'est pas déclarée** pour le site : seule `app.chatvote.org` l'est. Si la production est servie ailleurs, demander à l'infra de l'ajouter. Previews et `localhost` ne sont pas comptés.
+- Réglages de l'instance (confirmés par l'infra) : IP anonymisée sur 2 octets, Do Not Track pris en charge, journaux de visite supprimés à **90 jours**, pas de User ID / sessions / heatmaps / formulaires, extensions verrouillées. Pas de base GeoIP (aucune localisation par IP) ; un pays approximatif peut venir de la langue du navigateur : écrire « la localisation par adresse IP n'est pas utilisée », pas « la localisation n'est pas collectée ».
+- **Opposition** : case à cocher dans `/politique-de-confidentialite` (`src/scripts/matomo-optout.ts`, fonctions `optUserOut` / `forgetUserOptOut` / `isUserOptedOut` de `matomo.js`). L'iframe d'opposition Matomo **n'est pas publiée** (partie de l'interface d'administration). Le choix est mémorisé par le cookie first-party `mtm_consent_removed`, posé **seulement après une opposition**.
+- CSP : `https://stats.tndm.fr` dans `script-src`, `connect-src`, `img-src` ; **pas** dans `frame-src`. Test : `src/matomo-csp.test.ts`.
+
 ## Contraintes de confidentialité
 
-- Pas d'analytics, pas de Google Fonts, pas de CDN. **Exception actée : le script du widget Zaq** (script tiers qui s'exécute dans notre page avec accès à son DOM et à ses cookies non-HttpOnly). La confiance accordée à Zaq est à valider (voir « À trancher »).
-- **Deux cookies first-party** : `userID` (HttpOnly, posé par le serveur) et `conversationId` (posé par le navigateur). Aucun autre cookie, et **aucun `localStorage`/`sessionStorage` dans notre page** (le widget pourrait en utiliser dans sa propre origine : à vérifier).
+- Pas d'analytics tiers (la mesure d'audience est Matomo, auto-hébergé), pas de Google Fonts, pas de CDN. **Exception actée : le script du widget Zaq** (hébergé et exploité par Tandem, mais d'une autre origine : il s'exécute dans notre page avec accès à son DOM et à ses cookies non-HttpOnly). La confiance accordée à Zaq est à valider (voir « À trancher »).
+- **Deux cookies first-party** : `userID` (HttpOnly, posé par le serveur) et `conversationId` (posé par le navigateur). Seul autre cookie possible : `mtm_consent_removed` (Matomo), uniquement si le visiteur s'oppose à la mesure d'audience. Aucun `localStorage`/`sessionStorage` dans notre page (le widget pourrait en utiliser dans sa propre origine : à vérifier).
 - **Le widget pose aussi son propre cookie** `_zaq_key` (origine Zaq, `Secure`, `HttpOnly`, `SameSite=None`), donc un cookie tiers dans notre iframe : à faire expliquer par Zaq et à intégrer à l'analyse RGPD (constaté à la lecture de la réponse de `/widget/13`).
 - Le `userID` est un UUID aléatoire : il ne contient **aucune donnée personnelle** et n'est jamais dérivé d'informations sur l'utilisateur (IP, user-agent, etc.). Lié à un historique de conversation, il reste une donnée **pseudonyme** au sens du RGPD.
 - Polices, logos et favicon sont **servis localement** (aucun hotlink).
-- Zaq reçoit l'adresse IP des visiteurs (inévitable avec un widget tiers).
+- Zaq reçoit l'adresse IP des visiteurs (il est hébergé par Tandem : pas de transfert à un tiers).
 
 ### CSP et en-têtes (`vercel.json`)
 
@@ -149,11 +162,11 @@ Rendre la règle vérifiable techniquement. État actuel (à valider sur une pre
 
 ```
 default-src 'self';
-script-src 'self' <ORIGINE_ZAQ>;
+script-src 'self' <ORIGINE_ZAQ> https://stats.tndm.fr;
 style-src 'self';
 font-src 'self';
-img-src 'self' data:;
-connect-src 'self' <ORIGINE_ZAQ> wss://<HOTE_ZAQ>;
+img-src 'self' data: https://stats.tndm.fr;
+connect-src 'self' <ORIGINE_ZAQ> wss://<HOTE_ZAQ> https://stats.tndm.fr;
 frame-src <ORIGINE_ZAQ>;
 base-uri 'self';
 form-action 'none';
@@ -178,6 +191,9 @@ src/
     CommuneTrigger / CommunePopover / CommuneUnavailable
     Footer.astro
   scripts/zaq-widget.ts        settings, updateContext, cookie conversationId
+  scripts/matomo.ts            suivi Matomo (sans cookie de suivi)
+  scripts/matomo-optout.ts     case d'opposition (politique de confidentialité)
+  components/LegalPage.astro   mise en page des pages légales
   lib/zaq-identity.ts          signature du jeton HS256 (serveur)
   lib/zaq-ids.ts               noms de cookies + validation (partagé, sans import Node)
   lib/conversation-cookie.ts   cookie conversationId « commune:id » (navigateur)
@@ -188,6 +204,7 @@ src/
   data/generated/              index des communes généré au build (gitignoré)
   scripts/commune-switcher.ts  popover de recherche (navigateur)
   pages/index.astro            à la demande : chat, page « non disponible » ou 404
+  pages/mentions-legales.astro, pages/politique-de-confidentialite.astro   pages légales statiques
   pages/communes-index.json.ts index de recherche, prérendu
   pages/api/widget-identity.ts endpoint à la demande
   pages/api/pv/[commune]/[file].ts  PV augmenté (HTML converti ou PDF relayé), à la demande
@@ -313,7 +330,8 @@ Logo ChatVote en grand (taille relative à la hauteur de l'écran) et texte d'in
 - Le jeton est renouvelé sans perdre la conversation quand il expire (renouvellement par `embed.js`).
 - **Sur une preview Vercel (avec la CSP)** : aucune requête ni erreur bloquée par la CSP dans la console ; l'onglet Réseau n'affiche aucune requête vers un domaine autre que le nôtre et celui de Zaq.
 - Sélecteur : recherche (nom, INSEE, code postal), clavier, mobile 375 px, changement de commune puis reprise de conversation côté Zaq ; voir `docs/commune-selector-plan.md` §11.
-- Notre domaine pose **exactement deux cookies** (`userID` HttpOnly + `conversationId`), avec les attributs prévus (`Secure`, `SameSite=Lax`, `Path=/`, durée voulue), et **aucun** `localStorage`/`sessionStorage` dans notre origine.
+- Notre domaine pose **exactement deux cookies** (`userID` HttpOnly + `conversationId`), avec les attributs prévus (`Secure`, `SameSite=Lax`, `Path=/`, durée voulue), plus `mtm_consent_removed` **seulement après une opposition** à la mesure d'audience, et **aucun** `localStorage`/`sessionStorage` dans notre origine.
+- Matomo : après opposition (case décochée), plus aucune requête vers `matomo.php` ; recocher rétablit le suivi.
 - `GET /api/widget-identity` depuis un autre site ou sans `Origin` ni `Sec-Fetch-Site: same-origin` : refusé (403).
 - Aucune clé (`ZAQ_SIGNING_KEY`) dans le build client ni dans l'historique Git.
 - Cookies bloqués par le navigateur : le site ne plante pas (le widget démarre une nouvelle conversation, sans erreur visible).
