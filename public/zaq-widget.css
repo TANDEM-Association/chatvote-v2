@@ -36,3 +36,15 @@
   --zaq-widget-font-family: "Manrope", system-ui, sans-serif;
   --zaq-widget-radius: 18px;
 }
+
+/* Statut des étapes (« 4421 ms · Terminé ») : Zaq l'affiche dans la couleur primaire,
+   peu lisible sur le fond sombre (#381af3 : 2,4 sur #130436). Pas de propriété dédiée :
+   on cible la classe interne (susceptible de changer côté Zaq, à revérifier aux mises à jour).
+   Lavande dérivée de l'indigo : 9,5 sur #130436, 9,1 sur #180645 (AA et AAA). */
+.zaq-step-state {
+  color: #a1a1aa;
+}
+.zaq-reopen {
+  background-color: #a1a1aa;
+  color: #180645;
+}
