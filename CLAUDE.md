@@ -243,7 +243,7 @@ Valeurs clés (sombre) :
 - `--border: rgba(251,251,251,0.16)`
 - `--brand-indigo: #381bf3`, `--brand-orange: #f2461a`
 - Police : **Manrope**. Rayons : `--radius-full` pour boutons/pilules.
-- `--header-height` : 64 px mobile / 96 px desktop (valeurs Tandem, à réduire si le chat paraît à l'étroit).
+- `--header-height` : 52 px mobile, 64 px dès 768 px, 96 px dès 1024 px (Tandem : 64 / 96 ; réduit sur mobile pour laisser la hauteur au chat).
 
 Le fond actuel de ChatVote (`#1a0645`) est quasi identique au navy Tandem : on unifie sur `#170742`.
 
@@ -263,7 +263,7 @@ Fixe, non masquable, pas de bouton de fermeture :
 
 - Texte d'information sur l'initiative (associative, open source, souveraine), accroche « Aidez-nous à aider la démocratie ! », bouton **Soutenir** (`PUBLIC_DONATE_URL`) et lien « En savoir plus » (`PUBLIC_MORE_URL`). Un lien vide masque le bouton correspondant.
 - Fond `--surface-200`, filet `--border`, texte `--ink-secondary`.
-- Responsive : texte raccourci sur mobile, CTA conservé.
+- Responsive : **masqué sous 768 px** (gain de hauteur pour le chat) ; le bouton Soutenir (`DonateButton.astro`, partagé) passe alors dans le header. « par » est masqué sous 385 px pour lui faire de la place.
 
 ### Header (`Header`)
 
@@ -275,7 +275,7 @@ Texte seul, sans logo (un logo pourra être ajouté à l'enrichissement) :
 
 - Gauche : `© <année> TANDEM — Tech & Démocratie` ; droite : `Association loi 1901 · Saint-Saturnin`. Mention de version et de statut bêta.
 - Fond `--surface-100`, filet `--border` en haut, texte `--ink-secondary`, petite taille (`--body-sm-*`).
-- Mobile-first : blocs **empilés** et centrés par défaut, côte à côte dès ~640 px. Footer le plus compact possible sur mobile.
+- Mobile-first : sous 640 px, une seule ligne en 12 px (`©année TANDEM`, `Bêta 1.2`, liens légaux) et avertissement IA court (« Réponses générées par IA, à vérifier. ») ; textes complets et blocs côte à côte dès 640 px.
 - Année du copyright : calculée au build.
 
 ### Accueil du widget (`ZaqWidget`)

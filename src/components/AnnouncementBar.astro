@@ -1,6 +1,9 @@
 ---
-// TODO: PUBLIC_DONATE_URL et PUBLIC_MORE_URL à définir ; vide = bouton masqué.
-const donateUrl = import.meta.env.PUBLIC_DONATE_URL;
+import DonateButton from "./DonateButton.astro";
+
+// Masqué sous 768 px pour laisser la hauteur au chat : sur mobile, le bouton
+// « Soutenir » est dans le header.
+// TODO: PUBLIC_MORE_URL à définir ; vide = lien masqué.
 const moreUrl = import.meta.env.PUBLIC_MORE_URL;
 ---
 
@@ -8,7 +11,6 @@ const moreUrl = import.meta.env.PUBLIC_MORE_URL;
   <p class="text">
     <span class="long">ChatVote est une initiative associative open source et souveraine - la fiabilité de l'information fournie est notre priorité</span>
     <span class="medium">ChatVote - open source et souveraine</span>
-    <span class="short">ChatVote - open source et souveraine</span>
   </p>
   <div class="actions">
     {
@@ -18,30 +20,18 @@ const moreUrl = import.meta.env.PUBLIC_MORE_URL;
         </a>
       )
     }
-    {
-      
-      donateUrl && (
-        <a class="donate" href={donateUrl} target="_blank" rel="noopener noreferrer">
-          <svg class="heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-          </svg>
-          <span class="donate-long">Aidez-nous à aider la démocratie !</span>
-          <span class="donate-short">Soutenir</span>
-          <span class="sr-only"> (s'ouvre dans un nouvel onglet)</span>
-        </a>
-      )
-    }
+    <DonateButton />
   </div>
 </div>
 
 <style>
   .bar {
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-2);
+    gap: var(--space-4);
     width: 100%;
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-4);
     background: var(--surface-indigo);
     border-bottom: 1px solid var(--border);
     color: var(--ink);
@@ -54,8 +44,7 @@ const moreUrl = import.meta.env.PUBLIC_MORE_URL;
     line-height: 1.25;
   }
 
-  .long,
-  .medium {
+  .long {
     display: none;
   }
 
@@ -68,34 +57,16 @@ const moreUrl = import.meta.env.PUBLIC_MORE_URL;
 
   .more {
     display: none;
-  }
-
-  .more,
-  .donate {
     align-items: center;
     justify-content: center;
-    gap: var(--space-2);
-    height: 2rem;
+    height: 2.25rem;
     padding-inline: var(--space-3);
     border-radius: var(--radius-full);
-    font-size: 0.75rem;
+    color: var(--ink);
+    font-size: 0.875rem;
     font-weight: 600;
     white-space: nowrap;
     text-decoration: none;
-  }
-
-  .more {
-    color: var(--ink);
-  }
-
-  .donate {
-    display: inline-flex;
-    background: var(--brand-orange);
-    color: var(--ink);
-  }
-
-  .donate:hover {
-    background: color-mix(in srgb, var(--brand-orange) 80%, transparent);
   }
 
   .sr-only {
@@ -107,49 +78,9 @@ const moreUrl = import.meta.env.PUBLIC_MORE_URL;
     white-space: nowrap;
   }
 
-  .heart {
-    width: 0.875rem;
-    height: 0.875rem;
-    flex: none;
-  }
-
-  .donate-long {
-    display: none;
-  }
-
-  @media (min-width: 640px) {
-    .donate-long {
-      display: inline;
-    }
-
-    .donate-short {
-      display: none;
-    }
-  }
-
   @media (min-width: 768px) {
     .bar {
-      gap: var(--space-4);
-      padding: var(--space-3) var(--space-4);
-    }
-
-    .short {
-      display: none;
-    }
-
-    .medium {
-      display: inline;
-    }
-
-    .more,
-    .donate {
-      height: 2.25rem;
-      font-size: 0.875rem;
-    }
-
-    .heart {
-      width: 1rem;
-      height: 1rem;
+      display: flex;
     }
   }
 
