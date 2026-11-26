@@ -1,5 +1,6 @@
 ---
 import CommuneTrigger from "./CommuneTrigger.astro";
+import DonateButton from "./DonateButton.astro";
 import ViewToggle from "./ViewToggle.astro";
 
 interface Props {
@@ -30,6 +31,8 @@ const logoTandemHref = import.meta.env.PUBLIC_LOGO_TANDEM_HREF;
   <img class="tandem" src="/tandem-logo.svg" alt="Tandem, tech et démocratie" width="402" height="140" />
   </a>
   <div class="end">
+    <!-- Mobile : le bandeau est masqué, « Soutenir » passe ici. -->
+    <DonateButton label="short" class="header-donate" />
     <CommuneTrigger variant="pill" name={communeName} />
     <ViewToggle />
   </div>
@@ -39,7 +42,7 @@ const logoTandemHref = import.meta.env.PUBLIC_LOGO_TANDEM_HREF;
   .header {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-2);
     height: var(--header-height);
     padding-inline: var(--gutter);
     background: var(--surface-100);
@@ -54,7 +57,7 @@ const logoTandemHref = import.meta.env.PUBLIC_LOGO_TANDEM_HREF;
   .end {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-2);
     margin-inline-start: auto;
   }
 
@@ -63,20 +66,37 @@ const logoTandemHref = import.meta.env.PUBLIC_LOGO_TANDEM_HREF;
     width: auto;
   }
 
+  /* Masqué sur les écrans les plus étroits (iPhone SE) pour loger « Soutenir ». */
   .by {
+    display: none;
     color: var(--ink-secondary);
     font-size: var(--body-md-size);
     line-height: 1;
   }
 
   .tandem {
-    height: 2rem;
+    height: 1.75rem;
     width: auto;
+  }
+
+  @media (min-width: 385px) {
+    .by {
+      display: block;
+    }
   }
 
   @media (min-width: 768px) {
     .header {
       gap: var(--space-4);
+    }
+
+    .end {
+      gap: var(--space-3);
+    }
+
+    /* Le bandeau réapparaît avec son propre bouton « Soutenir ». */
+    .end :global(.header-donate) {
+      display: none;
     }
 
     .tandem {

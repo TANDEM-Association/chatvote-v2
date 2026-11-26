@@ -13,6 +13,8 @@
  *     couleurs de marque/surface/encre/bordure viennent du CLAUDE.md ; les
  *     échelles typo, espacements, rayons et --container sont des valeurs
  *     provisoires à aligner sur tokens.css de Tandem.
+ *  5. --header-height : 52px sur mobile (Tandem : 64px), pour laisser la
+ *     hauteur au chat ; 64px dès 768px, 96px dès 1024px.
  */
 
 :root {
@@ -59,7 +61,7 @@
   /* Layout */
   --container: 72rem;
   --gutter: var(--space-4);
-  --header-height: 64px;
+  --header-height: 52px;
 }
 
 @media (min-width: 768px) {
@@ -69,6 +71,7 @@
     --display-md-size: 1.75rem;
     --body-sm-size: 0.875rem;
     --gutter: var(--space-6);
+    --header-height: 64px;
   }
 }
 

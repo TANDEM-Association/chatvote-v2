@@ -2,10 +2,17 @@
 const year = new Date().getFullYear();
 ---
 
-<p class="disclaimer">Les réponses sont générées par une IA et peuvent contenir des erreurs ou des inexactitudes. Pensez à vérifier les informations importantes avant de vous y fier.</p>
+<!-- Mobile : textes courts sur une ligne, pour laisser la hauteur au chat. -->
+<p class="disclaimer">
+  <span class="long">Les réponses sont générées par une IA et peuvent contenir des erreurs ou des inexactitudes. Pensez à vérifier les informations importantes avant de vous y fier.</span>
+  <span class="short">Réponses générées par IA, à vérifier.</span>
+</p>
 <footer class="footer">
-  <p>©{year} TANDEM — Tech &amp; Démocratie</p>
-  <p class="beta">Version 1.2 BETA en cours de développement</p>
+  <p>©{year} TANDEM<span class="long"> — Tech &amp; Démocratie</span></p>
+  <p class="beta">
+    <span class="long">Version 1.2 BETA en cours de développement</span>
+    <span class="short">Bêta 1.2</span>
+  </p>
   <nav aria-label="Liens légaux">
     <ul class="legal">
       <li><a href="/mentions-legales">Mentions légales</a></li>
@@ -15,29 +22,33 @@ const year = new Date().getFullYear();
 </footer>
 
 <style>
+  .long {
+    display: none;
+  }
+
   .disclaimer {
     margin: 0;
     padding: var(--space-1) var(--gutter);
     background: var(--ink);
     color: var(--surface-100);
     text-align: center;
-    font-size: var(--body-sm-size);
-    line-height: var(--body-sm-line);
-
+    font-size: 0.75rem;
+    line-height: 1.3;
   }
 
   .footer {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     align-items: center;
-    text-align: center;
-    gap: var(--space-1);
-    padding: var(--space-2) var(--gutter);
+    justify-content: center;
+    gap: 0 var(--space-3);
+    padding: var(--space-1) var(--gutter);
     background: var(--surface-100);
     border-top: 1px solid var(--border);
     color: var(--ink-secondary);
-    font-size: var(--body-sm-size);
-    line-height: var(--body-sm-line);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    text-align: center;
 
     .beta {
       color: var(--ink);
@@ -49,18 +60,36 @@ const year = new Date().getFullYear();
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: var(--space-1) var(--space-2);
+    gap: 0 var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   @media (min-width: 640px) {
+    .long {
+      display: inline;
+    }
+
+    .short {
+      display: none;
+    }
+
+    .disclaimer,
     .footer {
-      flex-direction: row;
-      align-items: normal;
-      text-align: start;
+      font-size: var(--body-sm-size);
+      line-height: var(--body-sm-line);
+    }
+
+    .footer {
       justify-content: space-between;
+      gap: var(--space-1) var(--space-4);
+      padding-block: var(--space-2);
+      text-align: start;
+    }
+
+    .legal {
+      gap: var(--space-1) var(--space-2);
     }
   }
 </style>
