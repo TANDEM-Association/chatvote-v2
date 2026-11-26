@@ -18,6 +18,13 @@ interface Props {
 }
 
 const { title, description, noindex = false, commune } = Astro.props;
+
+// Aperçus de partage (WhatsApp, réseaux sociaux) : URL absolues obligatoires.
+// Pages à la demande : origine de la requête (correcte aussi sur les previews) ;
+// pages prérendues : `site` (astro.config.mjs).
+const origin = Astro.isPrerendered ? (Astro.site ?? Astro.url) : Astro.url;
+const pageUrl = new URL(Astro.url.pathname + Astro.url.search, origin);
+const ogImage = new URL("/og-image.png", origin);
 ---
 
 <html lang="fr">
@@ -30,6 +37,18 @@ const { title, description, noindex = false, commune } = Astro.props;
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    <meta property="og:url" content={pageUrl.href} />
+    <meta property="og:site_name" content="ChatVote" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:image" content={ogImage.href} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="ChatVote : comprenez ce que votre mairie décide"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#170742" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link

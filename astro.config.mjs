@@ -5,6 +5,8 @@ export default defineConfig({
   // Site statique : seule la route /api/widget-identity est rendue à la demande
   // (export const prerender = false).
   output: "static",
+  // URL publique : sert aux liens absolus des pages prérendues (aperçus de partage).
+  site: "https://app.chatvote.org",
   adapter: vercel(),
   env: {
     schema: {
