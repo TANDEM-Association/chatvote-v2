@@ -36,7 +36,7 @@ export default defineConfig({
     },
   },
   server: {
-    // astro dev n'applique pas les en-têtes de deploy/Caddyfile : la feuille du widget et les polices sont
+    // astro dev n'applique pas les en-têtes de deploy/base/Caddyfile : la feuille du widget et les polices sont
     // chargées depuis l'iframe Zaq (autre origine), donc CORS aussi en local.
     // Feuille et polices sont publiques, sans cookies : * suffit en dev.
     headers: { "Access-Control-Allow-Origin": "*" },
