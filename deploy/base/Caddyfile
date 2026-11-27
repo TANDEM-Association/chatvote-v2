@@ -6,7 +6,7 @@
 	servers {
 		# Traefik (réseau du cluster) est devant : garder ses X-Forwarded-Proto/Host,
 		# dont dépend le contrôle d'origine de /api/widget-identity.
-		trusted_proxies static private_ranges
+		trusted_proxies static private_ranges 100.64.0.0/10
 	}
 }
 

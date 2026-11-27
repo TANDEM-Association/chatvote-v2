@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-// Lecture de deploy/Caddyfile pour les tests : les `{$VAR:défaut}` sont remplacés
+// Lecture de deploy/base/Caddyfile pour les tests : les `{$VAR:défaut}` sont remplacés
 // par leur valeur par défaut (la production), comme le fait Caddy sans variable définie.
 const raw = readFileSync(
   new URL("../deploy/base/Caddyfile", import.meta.url),
