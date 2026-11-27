@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: chatvote-prod
 resources:
   - ../../base
+  - legacy-redirect.yaml
 images:
   - name: rg.fr-par.scw.cloud/chatvote-v2/web
     newTag: prod-1   # tag de l'image construite pour la prod

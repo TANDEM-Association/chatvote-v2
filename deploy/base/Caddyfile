@@ -40,6 +40,10 @@
 
 	header @communes >Cache-Control "public, max-age=3600"
 
+	# Anciens domaines (DNS vers ce cluster) : redirection permanente vers l'adresse canonique.
+	@legacy host chatvote.org www.chatvote.org
+	redir @legacy https://app.chatvote.org{uri} permanent
+
 	respond /healthz 200
 
 	reverse_proxy 127.0.0.1:4321
